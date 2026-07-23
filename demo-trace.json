@@ -1,0 +1,40 @@
+{
+  "requested_cutoff_hz": 1200.0,
+  "commissioned": {
+    "resistor_index": 0,
+    "capacitor_mask": 43,
+    "active_capacitors": [
+      0,
+      1,
+      3,
+      5
+    ],
+    "nominal_resistance_ohms": 2200.0,
+    "nominal_capacitance_nf": 60.199999999999996,
+    "physical_cutoff_hz": 1185.6247993177485,
+    "response_error_db": 0.0798160930629869,
+    "measurements": 24
+  },
+  "fault": {
+    "type": "open_capacitor",
+    "capacitor_index": 5,
+    "nominal_capacitance_nf": 47.0,
+    "detected": true,
+    "signature_error_db": 7.424392978449751
+  },
+  "recovered": {
+    "resistor_index": 2,
+    "capacitor_mask": 11,
+    "active_capacitors": [
+      0,
+      1,
+      3
+    ],
+    "nominal_resistance_ohms": 10000.0,
+    "nominal_capacitance_nf": 13.200000000000001,
+    "physical_cutoff_hz": 1233.6396504444742,
+    "response_error_db": 0.15950352894690348,
+    "measurements": 24
+  },
+  "total_board_measurements": 51
+}
