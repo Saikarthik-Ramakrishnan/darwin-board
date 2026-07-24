@@ -46,8 +46,6 @@ PYTHONPATH=src python3 -m darwin_board.visualizer_server
 
 Open [http://127.0.0.1:8765](http://127.0.0.1:8765). Choose a target, search
 budget, and fault scenario, then step through tuning, injection, and recovery.
-The lab supports light and dark themes and exports the complete experiment
-trace as JSON.
 
 Run the terminal demonstration:
 
@@ -88,12 +86,4 @@ docs/                   Architecture and hardware plan
 See [`docs/architecture.md`](docs/architecture.md) for the software loop and
 [`docs/hardware-mvp.md`](docs/hardware-mvp.md) for the first physical build.
 
-## Physical milestone
-
-The next milestone connects the controller to a low-voltage RC network with a
-waveform source, switch bank, buffered measurement path, and USB serial bridge.
-Acceptance requires tuning at 500 Hz, 1 kHz, and 2 kHz, detection within two
-health cycles, and recovery below 1 dB RMS error.
-
-Operate the prototype at 3.3 V or 5 V. Keep it isolated from mains voltage,
-high-power loads, and unprotected battery packs.
+#
