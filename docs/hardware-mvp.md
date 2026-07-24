@@ -108,9 +108,11 @@ Later versions can simulate:
 
 - Tune to requested cutoffs of 500 Hz, 1 kHz, and 2 kHz.
 - Achieve less than 1 dB RMS response error over the measured frequency grid.
-- Detect an opened active capacitor branch with no more than two health sweeps.
+- Detect an opened branch, capacitor drift, and resistor drift with no more
+  than two health cycles.
 - Restore less than 1 dB RMS error through a different configuration.
-- Report total measurements, recovery latency, and selected components.
+- Report total measurements, recovery latency, selected components, supply
+  voltage, and board temperature.
 
 ## Decisions needed before hardware integration
 
@@ -121,4 +123,3 @@ Later versions can simulate:
 
 Keep the prototype at 3.3 V or 5 V. Do not connect it to mains or high-power
 loads.
-

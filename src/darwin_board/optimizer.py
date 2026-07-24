@@ -15,6 +15,9 @@ class Evaluation:
     response_error_db: float
     power_penalty: float
     response_db: np.ndarray
+    selection_method: str
+    predicted_score: float | None
+    predicted_uncertainty: float | None
 
 
 @dataclass(frozen=True)
@@ -75,7 +78,7 @@ class BayesianTuner:
             )
             initial_indices.extend(int(index) for index in random_indices)
 
-        for index in initial_indices:
+        for sample_index, index in enumerate(initial_indices):
             if index in unseen:
                 unseen.remove(index)
             evaluated.append(
@@ -84,6 +87,11 @@ class BayesianTuner:
                     candidates[index],
                     frequencies_hz,
                     target,
+                    selection_method=(
+                        "nominal prior"
+                        if sample_index == 0
+                        else "exploration seed"
+                    ),
                 )
             )
 
@@ -100,7 +108,8 @@ class BayesianTuner:
                 features[candidate_indices],
             )
             acquisition = mean - self.exploration * standard_deviation
-            next_index = int(candidate_indices[int(np.argmin(acquisition))])
+            selected_position = int(np.argmin(acquisition))
+            next_index = int(candidate_indices[selected_position])
             unseen.remove(next_index)
             evaluated.append(
                 self._evaluate(
@@ -108,6 +117,11 @@ class BayesianTuner:
                     candidates[next_index],
                     frequencies_hz,
                     target,
+                    selection_method="lower confidence bound",
+                    predicted_score=float(mean[selected_position]),
+                    predicted_uncertainty=float(
+                        standard_deviation[selected_position]
+                    ),
                 )
             )
 
@@ -135,6 +149,10 @@ class BayesianTuner:
         configuration: Configuration,
         frequencies_hz: np.ndarray,
         target: np.ndarray,
+        *,
+        selection_method: str,
+        predicted_score: float | None = None,
+        predicted_uncertainty: float | None = None,
     ) -> Evaluation:
         response = board.measure_response_db(configuration, frequencies_hz)
         response_error = float(np.sqrt(np.mean((response - target) ** 2)))
@@ -147,6 +165,9 @@ class BayesianTuner:
             response_error_db=response_error,
             power_penalty=power_penalty,
             response_db=response,
+            selection_method=selection_method,
+            predicted_score=predicted_score,
+            predicted_uncertainty=predicted_uncertainty,
         )
 
     def _predict(
@@ -192,4 +213,3 @@ class BayesianTuner:
             axis=2,
         )
         return np.exp(-0.5 * squared_distance / self.length_scale**2)
-

@@ -1,0 +1,1449 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darwin Board Lab</title>
+  <script>
+    (() => {
+      try {
+        const saved = localStorage.getItem("darwin-board-theme");
+        const preferred = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = saved || preferred;
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f4f4f0;
+      --surface: #ffffff;
+      --surface-subtle: #ecece6;
+      --ink: #171816;
+      --muted: #676963;
+      --line: #d8d9d2;
+      --line-strong: #aaada5;
+      --blue: #2857c5;
+      --red: #b34335;
+      --green: #287657;
+      --amber: #9a6818;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --numeric: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #121310;
+      --surface: #1a1b18;
+      --surface-subtle: #22231f;
+      --ink: #f0f1eb;
+      --muted: #a1a49b;
+      --line: #30322d;
+      --line-strong: #555950;
+      --blue: #83a3ef;
+      --red: #e17d70;
+      --green: #6fbd95;
+      --amber: #d2a154;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 24px auto 48px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 0 18px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--ink);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-name {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-subtitle,
+    .version {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .version {
+      font-family: var(--numeric);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .theme-icon {
+      position: relative;
+      width: 13px;
+      height: 13px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+    }
+
+    .theme-icon::after {
+      content: "";
+      position: absolute;
+      inset: 2px 2px 2px 6px;
+      border-radius: 0 8px 8px 0;
+      background: currentColor;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 155px 185px auto;
+      gap: 18px;
+      align-items: end;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .field output {
+      color: var(--ink);
+      font-family: var(--numeric);
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      text-transform: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--ink);
+    }
+
+    select {
+      width: 100%;
+      height: 36px;
+      padding: 0 32px 0 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button {
+      height: 36px;
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: var(--ink);
+    }
+
+    button.primary {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--surface);
+    }
+
+    button.danger {
+      color: var(--red);
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.42;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: minmax(180px, 1.35fr) repeat(4, minmax(120px, 1fr));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .status-block {
+      min-width: 0;
+      padding: 18px 18px 18px 0;
+    }
+
+    .status-block + .status-block {
+      padding-left: 18px;
+      border-left: 1px solid var(--line);
+    }
+
+    .status-label {
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .status-value {
+      overflow: hidden;
+      font-family: var(--numeric);
+      font-size: 16px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+      letter-spacing: -0.015em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--sans);
+      font-size: 15px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--line-strong);
+      flex: 0 0 auto;
+    }
+
+    .status-dot.ready {
+      background: var(--blue);
+    }
+
+    .status-dot.fault {
+      background: var(--red);
+    }
+
+    .status-dot.recovered {
+      background: var(--green);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.75fr);
+      gap: 32px;
+      padding-top: 28px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 15px;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1,
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-line {
+      width: 20px;
+      height: 0;
+      border-top: 2px solid var(--ink);
+    }
+
+    .legend-line.target {
+      border-color: var(--muted);
+      border-top-style: dashed;
+    }
+
+    .legend-line.nominal {
+      border-color: var(--blue);
+    }
+
+    .legend-line.fault {
+      border-color: var(--red);
+    }
+
+    .legend-line.recovered {
+      border-color: var(--green);
+    }
+
+    .plot-wrap {
+      position: relative;
+      min-height: 390px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+
+    #response-chart {
+      display: block;
+      width: 100%;
+      height: 390px;
+    }
+
+    .axis-text {
+      fill: var(--muted);
+      font-family: var(--numeric);
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .axis-label {
+      fill: var(--muted);
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .grid-line {
+      stroke: var(--line);
+      stroke-width: 1;
+    }
+
+    .axis-line {
+      stroke: var(--line-strong);
+      stroke-width: 1;
+    }
+
+    .curve {
+      fill: none;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      stroke-width: 2;
+    }
+
+    .curve.target {
+      stroke: var(--muted);
+      stroke-dasharray: 5 5;
+      stroke-width: 1.5;
+    }
+
+    .curve.nominal {
+      stroke: var(--blue);
+    }
+
+    .curve.fault {
+      stroke: var(--red);
+    }
+
+    .curve.recovered {
+      stroke: var(--green);
+    }
+
+    .cutoff-guide {
+      stroke: var(--line-strong);
+      stroke-dasharray: 2 4;
+      stroke-width: 1;
+    }
+
+    .search {
+      margin-top: 24px;
+    }
+
+    .search-track {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 4px;
+      height: 64px;
+      align-items: end;
+    }
+
+    .search-bar {
+      min-height: 3px;
+      background: var(--line-strong);
+      transition: height 180ms ease;
+    }
+
+    .search-bar.best {
+      background: var(--blue);
+    }
+
+    .side {
+      display: grid;
+      align-content: start;
+      gap: 28px;
+    }
+
+    .schematic {
+      width: 100%;
+      height: 150px;
+      margin: 5px 0 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+
+    .schematic text {
+      fill: var(--muted);
+      font-family: var(--numeric);
+      font-size: 9px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .schematic .wire {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 1.5;
+    }
+
+    .schematic .component {
+      fill: var(--surface);
+      stroke: var(--ink);
+      stroke-width: 1.5;
+    }
+
+    .schematic .open {
+      stroke: var(--red);
+    }
+
+    .schematic .drift {
+      stroke: var(--amber);
+    }
+
+    .schematic .active-cap {
+      fill: var(--ink);
+    }
+
+    .component-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .component-table th,
+    .component-table td {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .component-table th {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .component-table td {
+      font-family: var(--numeric);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+      text-align: right;
+    }
+
+    .timeline {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .timeline li {
+      position: relative;
+      padding: 0 0 18px 24px;
+      color: var(--muted);
+    }
+
+    .timeline li:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline li::before {
+      content: "";
+      position: absolute;
+      top: 5px;
+      left: 2px;
+      width: 7px;
+      height: 7px;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      background: var(--page);
+    }
+
+    .timeline li::after {
+      content: "";
+      position: absolute;
+      top: 14px;
+      bottom: 2px;
+      left: 5px;
+      border-left: 1px solid var(--line);
+    }
+
+    .timeline li:last-child::after {
+      display: none;
+    }
+
+    .timeline li.complete {
+      color: var(--ink);
+    }
+
+    .timeline li.complete::before {
+      border-color: var(--ink);
+      background: var(--ink);
+    }
+
+    .timeline li.current::before {
+      border-color: var(--blue);
+      background: var(--blue);
+    }
+
+    .timeline-title {
+      display: block;
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+
+    .timeline-detail {
+      display: block;
+      font-family: var(--numeric);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+
+    .diagnostic-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .empty-message {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .empty-message[hidden] {
+      display: none;
+    }
+
+    .loading {
+      animation: pulse 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.45; }
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 860px) {
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .controls > .field:first-child {
+        grid-column: 1 / -1;
+      }
+
+      .actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+      }
+
+      .status-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .status-block:nth-child(3),
+      .status-block:nth-child(5) {
+        padding-left: 0;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .status-block:nth-child(4),
+      .status-block:nth-child(5) {
+        border-top: 1px solid var(--line);
+      }
+
+      .status-block:nth-child(5) {
+        grid-column: 1 / -1;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .shell {
+        width: min(100% - 20px, 1180px);
+        margin-top: 12px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .brand-subtitle,
+      .version {
+        display: none;
+      }
+
+      .theme-label {
+        display: none;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .controls > .field:first-child {
+        grid-column: auto;
+      }
+
+      .actions {
+        grid-column: auto;
+      }
+
+      .actions button {
+        flex: 1 1 auto;
+      }
+
+      .status-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .status-block {
+        padding: 14px 12px 14px 0;
+      }
+
+      .status-block + .status-block {
+        padding-left: 12px;
+      }
+
+      .status-value {
+        font-size: 14px;
+      }
+
+      .section-head {
+        display: grid;
+      }
+
+      .legend {
+        justify-content: flex-start;
+      }
+
+      .plot-wrap,
+      #response-chart {
+        min-height: 320px;
+        height: 320px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">DB</div>
+        <div>
+          <div class="brand-name">Darwin Board</div>
+        <div class="brand-subtitle">Self-tuning analog systems lab</div>
+        </div>
+      </div>
+      <div class="topbar-meta">
+        <div class="version">SIMULATION / M0.2</div>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">
+          <span class="theme-icon" aria-hidden="true"></span>
+          <span id="theme-label" class="theme-label">Dark mode</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="controls" aria-label="Simulation controls">
+        <label class="field" for="cutoff">
+          <span class="field-head">
+            Target cutoff
+            <output id="cutoff-value" for="cutoff">1.20 kHz</output>
+          </span>
+          <input id="cutoff" type="range" min="300" max="5000" step="50" value="1200">
+        </label>
+
+        <label class="field" for="budget">
+          <span class="field-head">Search budget</span>
+          <select id="budget">
+            <option value="16">16 measurements</option>
+            <option value="24" selected>24 measurements</option>
+            <option value="32">32 measurements</option>
+            <option value="40">40 measurements</option>
+          </select>
+        </label>
+
+        <label class="field" for="fault-type">
+          <span class="field-head">Fault scenario</span>
+          <select id="fault-type">
+            <option value="open_capacitor" selected>Open capacitor branch</option>
+            <option value="capacitor_drift">Capacitor drift −45%</option>
+            <option value="resistor_drift">Resistor drift +50%</option>
+          </select>
+        </label>
+
+        <div class="actions">
+          <button id="tune" class="primary" type="button">Tune circuit</button>
+          <button id="fault" class="danger" type="button" disabled>Inject fault</button>
+          <button id="recover" type="button" disabled>Recover</button>
+          <button id="export" type="button" disabled>Export trace</button>
+        </div>
+      </section>
+
+      <section class="status-strip" aria-label="Current circuit status" aria-live="polite">
+        <div class="status-block">
+          <div class="status-label">State</div>
+          <div class="status-line">
+            <span id="status-dot" class="status-dot"></span>
+            <span id="state-value">Awaiting test</span>
+          </div>
+        </div>
+        <div class="status-block">
+          <div class="status-label">Measured cutoff</div>
+          <div id="measured-cutoff" class="status-value">--</div>
+        </div>
+        <div class="status-block">
+          <div class="status-label">Response error</div>
+          <div id="response-error" class="status-value">--</div>
+        </div>
+        <div class="status-block">
+          <div class="status-label">Measurements</div>
+          <div id="measurement-count" class="status-value">0</div>
+        </div>
+        <div class="status-block">
+          <div class="status-label">Evidence</div>
+          <div id="evidence-value" class="status-value">--</div>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <div>
+          <section aria-labelledby="response-title">
+            <div class="section-head">
+              <div>
+                <h1 id="response-title">Frequency response</h1>
+                <p class="section-note">Gain across the measured frequency range</p>
+              </div>
+              <div class="legend" aria-label="Chart legend">
+                <span class="legend-item"><span class="legend-line target"></span>Target</span>
+                <span id="legend-nominal" class="legend-item"><span class="legend-line nominal"></span>Tuned</span>
+                <span id="legend-fault" class="legend-item" hidden><span class="legend-line fault"></span>Fault</span>
+                <span id="legend-recovered" class="legend-item" hidden><span class="legend-line recovered"></span>Recovered</span>
+              </div>
+            </div>
+            <div class="plot-wrap">
+              <svg id="response-chart" role="img" aria-label="Frequency response plot"></svg>
+              <div id="empty-message" class="empty-message">Run a tuning cycle to populate the trace.</div>
+            </div>
+          </section>
+
+          <section class="search" aria-labelledby="search-title">
+            <div class="section-head">
+              <div>
+                <h2 id="search-title">Search observations</h2>
+                <p class="section-note">Response error for each tested configuration</p>
+              </div>
+              <div id="best-observation" class="section-note">No measurements</div>
+            </div>
+            <div id="search-track" class="search-track" aria-label="Search observation errors"></div>
+          </section>
+        </div>
+
+        <aside class="side">
+          <section aria-labelledby="circuit-title">
+            <div class="section-head">
+              <div>
+                <h2 id="circuit-title">Active circuit</h2>
+                <p class="section-note">Selected component path</p>
+              </div>
+            </div>
+
+            <svg class="schematic" viewBox="0 0 320 150" role="img" aria-label="RC low-pass circuit schematic">
+              <text x="18" y="70">VIN</text>
+              <path class="wire" d="M 44 66 L 68 66"></path>
+              <path id="resistor-path" class="component" d="M 68 66 L 76 54 L 88 78 L 100 54 L 112 78 L 124 54 L 136 66"></path>
+              <text id="schematic-r" x="86" y="42">R --</text>
+              <path class="wire" d="M 136 66 L 214 66"></path>
+              <circle cx="177" cy="66" r="3" fill="var(--ink)"></circle>
+              <text x="220" y="70">VOUT</text>
+              <path class="wire" d="M 177 66 L 177 91"></path>
+              <path id="cap-left" class="component" d="M 158 91 L 196 91"></path>
+              <path id="cap-right" class="component" d="M 158 99 L 196 99"></path>
+              <path class="wire" d="M 177 99 L 177 123"></path>
+              <path class="wire" d="M 160 123 L 194 123 M 166 130 L 188 130 M 172 137 L 182 137"></path>
+              <text id="schematic-c" x="204" y="100">C --</text>
+              <text id="schematic-fault" x="18" y="133"></text>
+            </svg>
+
+            <table class="component-table" aria-label="Circuit values">
+              <tbody>
+                <tr>
+                  <th scope="row">Resistance</th>
+                  <td id="resistance">--</td>
+                </tr>
+                <tr>
+                  <th scope="row">Capacitance</th>
+                  <td id="capacitance">--</td>
+                </tr>
+                <tr>
+                  <th scope="row">Active branches</th>
+                  <td id="active-branches">--</td>
+                </tr>
+                <tr>
+                  <th scope="row">Diagnostic evidence</th>
+                  <td id="signature-delta">--</td>
+                </tr>
+              </tbody>
+            </table>
+            <p id="diagnostic-note" class="diagnostic-note">
+              Health evidence appears after fault injection.
+            </p>
+          </section>
+
+          <section aria-labelledby="sequence-title">
+            <div class="section-head">
+              <div>
+                <h2 id="sequence-title">Run sequence</h2>
+                <p class="section-note">Current experiment state</p>
+              </div>
+            </div>
+            <ol class="timeline">
+              <li id="step-tune">
+                <span class="timeline-title">Tune</span>
+                <span id="detail-tune" class="timeline-detail">Pending</span>
+              </li>
+              <li id="step-fault">
+                <span class="timeline-title">Fault injection</span>
+                <span id="detail-fault" class="timeline-detail">Pending</span>
+              </li>
+              <li id="step-recover">
+                <span class="timeline-title">Recovery</span>
+                <span id="detail-recover" class="timeline-detail">Pending</span>
+              </li>
+            </ol>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      session: null,
+      stage: "idle",
+      loading: false,
+      error: null
+    };
+
+    const elements = {
+      cutoff: document.getElementById("cutoff"),
+      cutoffValue: document.getElementById("cutoff-value"),
+      budget: document.getElementById("budget"),
+      faultType: document.getElementById("fault-type"),
+      tune: document.getElementById("tune"),
+      fault: document.getElementById("fault"),
+      recover: document.getElementById("recover"),
+      export: document.getElementById("export"),
+      statusDot: document.getElementById("status-dot"),
+      stateValue: document.getElementById("state-value"),
+      measuredCutoff: document.getElementById("measured-cutoff"),
+      responseError: document.getElementById("response-error"),
+      measurementCount: document.getElementById("measurement-count"),
+      evidenceValue: document.getElementById("evidence-value"),
+      chart: document.getElementById("response-chart"),
+      emptyMessage: document.getElementById("empty-message"),
+      legendFault: document.getElementById("legend-fault"),
+      legendRecovered: document.getElementById("legend-recovered"),
+      searchTrack: document.getElementById("search-track"),
+      bestObservation: document.getElementById("best-observation"),
+      resistance: document.getElementById("resistance"),
+      capacitance: document.getElementById("capacitance"),
+      activeBranches: document.getElementById("active-branches"),
+      signatureDelta: document.getElementById("signature-delta"),
+      diagnosticNote: document.getElementById("diagnostic-note"),
+      schematicR: document.getElementById("schematic-r"),
+      schematicC: document.getElementById("schematic-c"),
+      schematicFault: document.getElementById("schematic-fault"),
+      resistorPath: document.getElementById("resistor-path"),
+      capLeft: document.getElementById("cap-left"),
+      capRight: document.getElementById("cap-right"),
+      stepTune: document.getElementById("step-tune"),
+      stepFault: document.getElementById("step-fault"),
+      stepRecover: document.getElementById("step-recover"),
+      detailTune: document.getElementById("detail-tune"),
+      detailFault: document.getElementById("detail-fault"),
+      detailRecover: document.getElementById("detail-recover"),
+      themeToggle: document.getElementById("theme-toggle"),
+      themeLabel: document.getElementById("theme-label")
+    };
+
+    function setTheme(theme) {
+      const nextTheme = theme === "dark" ? "dark" : "light";
+      document.documentElement.dataset.theme = nextTheme;
+      const dark = nextTheme === "dark";
+      elements.themeLabel.textContent = dark ? "Light mode" : "Dark mode";
+      elements.themeToggle.setAttribute(
+        "aria-label",
+        dark ? "Switch to light mode" : "Switch to dark mode"
+      );
+      try {
+        localStorage.setItem("darwin-board-theme", nextTheme);
+      } catch {
+        // The toggle still works when storage is unavailable.
+      }
+    }
+
+    function formatFrequency(value) {
+      if (!Number.isFinite(value)) return "--";
+      if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 1 : 2)} kHz`;
+      return `${value.toFixed(0)} Hz`;
+    }
+
+    function formatResistance(value) {
+      if (!Number.isFinite(value)) return "--";
+      return value >= 1000 ? `${(value / 1000).toFixed(1)} kΩ` : `${value.toFixed(0)} Ω`;
+    }
+
+    function formatCapacitance(value) {
+      return Number.isFinite(value) ? `${value.toFixed(1)} nF` : "--";
+    }
+
+    function formatError(value) {
+      return Number.isFinite(value) ? `${value.toFixed(3)} dB` : "--";
+    }
+
+    function currentStage() {
+      if (!state.session || state.stage === "idle") return null;
+      return state.session.stages[state.stage];
+    }
+
+    function setLoading(loading) {
+      state.loading = loading;
+      elements.tune.disabled = loading;
+      elements.fault.disabled = loading || state.stage !== "commissioned";
+      elements.recover.disabled = loading || state.stage !== "fault";
+      elements.export.disabled = loading || !state.session;
+      elements.faultType.disabled = loading;
+      elements.tune.textContent = loading ? "Running..." : "Tune circuit";
+      document.querySelector(".status-strip").classList.toggle("loading", loading);
+    }
+
+    async function tuneCircuit() {
+      setLoading(true);
+      state.error = null;
+      try {
+        const response = await fetch("/api/session", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            cutoff_hz: Number(elements.cutoff.value),
+            budget: Number(elements.budget.value),
+            seed: 7,
+            fault_kind: elements.faultType.value,
+            health_sweeps: 3
+          })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Simulation failed");
+        state.session = payload;
+        state.stage = "commissioned";
+        render();
+      } catch (error) {
+        state.session = null;
+        state.stage = "idle";
+        state.error = error.message;
+        render();
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function injectFault() {
+      if (!state.session) return;
+      state.stage = "fault";
+      render();
+      setLoading(false);
+    }
+
+    function recoverCircuit() {
+      if (!state.session) return;
+      state.stage = "recovered";
+      render();
+      setLoading(false);
+    }
+
+    function exportSession() {
+      if (!state.session) return;
+      const blob = new Blob(
+        [JSON.stringify(state.session, null, 2) + "\n"],
+        {type: "application/json"}
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `darwin-board-${state.session.stages.fault.kind}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function render() {
+      const stage = currentStage();
+      elements.emptyMessage.hidden = Boolean(state.session);
+      elements.legendFault.hidden = !state.session || state.stage === "commissioned";
+      elements.legendRecovered.hidden = state.stage !== "recovered";
+
+      if (!stage) {
+        elements.statusDot.className = "status-dot";
+        elements.stateValue.textContent = state.error || "Awaiting test";
+        elements.measuredCutoff.textContent = "--";
+        elements.responseError.textContent = "--";
+        elements.measurementCount.textContent = "0";
+        elements.evidenceValue.textContent = "--";
+        renderConfiguration(null);
+        renderTimeline();
+        renderSearch([]);
+        drawChart();
+        return;
+      }
+
+      const labels = {
+        commissioned: "Tuned and stable",
+        fault: stage.detected ? "Fault detected" : "Signature changed",
+        recovered: "Recovered"
+      };
+      const dotClasses = {
+        commissioned: "ready",
+        fault: "fault",
+        recovered: "recovered"
+      };
+      elements.statusDot.className = `status-dot ${dotClasses[state.stage]}`;
+      elements.stateValue.textContent = labels[state.stage];
+      elements.measuredCutoff.textContent = formatFrequency(stage.configuration.physical_cutoff_hz);
+      elements.responseError.textContent = formatError(stage.response_error_db);
+      const tunedMeasurements = state.session.stages.commissioned.measurements + 1;
+      const measurementCounts = {
+        commissioned: tunedMeasurements,
+        fault: tunedMeasurements + state.session.stages.fault.health_sweeps,
+        recovered: state.session.meta.total_measurements
+      };
+      elements.measurementCount.textContent = measurementCounts[state.stage];
+      if (state.stage === "commissioned") {
+        elements.evidenceValue.textContent = "Baseline stored";
+      } else if (state.stage === "fault") {
+        elements.evidenceValue.textContent =
+          `${stage.signature_ratio.toFixed(1)}× threshold`;
+      } else {
+        elements.evidenceValue.textContent =
+          `${stage.recovery_gain_db.toFixed(2)} dB restored`;
+      }
+      renderConfiguration(stage);
+      renderTimeline();
+      const search = state.stage === "recovered"
+        ? state.session.search.recovered
+        : state.session.search.commissioned;
+      renderSearch(search);
+      drawChart();
+    }
+
+    function renderConfiguration(stage) {
+      const configuration = stage?.configuration;
+      if (!configuration) {
+        elements.resistance.textContent = "--";
+        elements.capacitance.textContent = "--";
+        elements.activeBranches.textContent = "--";
+        elements.signatureDelta.textContent = "--";
+        elements.schematicR.textContent = "R --";
+        elements.schematicC.textContent = "C --";
+        elements.schematicFault.textContent = "";
+        elements.capLeft.classList.remove("open");
+        elements.capRight.classList.remove("open");
+        elements.capLeft.classList.remove("drift");
+        elements.capRight.classList.remove("drift");
+        elements.resistorPath.classList.remove("drift");
+        elements.diagnosticNote.textContent =
+          "Health evidence appears after fault injection.";
+        return;
+      }
+
+      elements.resistance.textContent = formatResistance(configuration.nominal_resistance_ohms);
+      elements.capacitance.textContent = formatCapacitance(configuration.nominal_capacitance_nf);
+      elements.activeBranches.textContent = configuration.active_capacitors
+        .map(index => `C${index + 1}`)
+        .join(", ");
+      if (state.stage === "fault") {
+        elements.signatureDelta.textContent =
+          `${formatError(stage.signature_error_db)} / ${stage.health_sweeps} sweeps`;
+        elements.diagnosticNote.textContent =
+          `${stage.label} on ${stage.component}; cutoff shifted ` +
+          `${stage.cutoff_shift_percent >= 0 ? "+" : ""}` +
+          `${stage.cutoff_shift_percent.toFixed(1)}%.`;
+      } else if (state.stage === "recovered") {
+        elements.signatureDelta.textContent =
+          `${formatError(stage.recovery_gain_db)} restored`;
+        elements.diagnosticNote.textContent =
+          `Recovery selected a new path from ` +
+          `${state.session.meta.candidate_count} candidates.`;
+      } else {
+        elements.signatureDelta.textContent = "Baseline stored";
+        elements.diagnosticNote.textContent =
+          `Monitoring uses ${state.session.meta.health_sweeps} median-aggregated sweeps.`;
+      }
+      elements.schematicR.textContent = `R ${formatResistance(configuration.nominal_resistance_ohms)}`;
+      elements.schematicC.textContent = `C ${formatCapacitance(configuration.nominal_capacitance_nf)}`;
+
+      const faulted = state.stage === "fault";
+      const faultKind = state.session.stages.fault.kind;
+      const openCapacitor = faulted && faultKind === "open_capacitor";
+      const driftingCapacitor = faulted && faultKind === "capacitor_drift";
+      const driftingResistor = faulted && faultKind === "resistor_drift";
+      elements.capLeft.classList.toggle("open", openCapacitor);
+      elements.capRight.classList.toggle("open", openCapacitor);
+      elements.capLeft.classList.toggle("drift", driftingCapacitor);
+      elements.capRight.classList.toggle("drift", driftingCapacitor);
+      elements.resistorPath.classList.toggle("drift", driftingResistor);
+      elements.schematicFault.textContent = faulted
+        ? `${stage.component}  ${stage.change_percent > 0 ? "+" : ""}` +
+          `${stage.change_percent.toFixed(0)}%  /  Δfc ` +
+          `${stage.cutoff_shift_percent > 0 ? "+" : ""}` +
+          `${stage.cutoff_shift_percent.toFixed(1)}%`
+        : "";
+    }
+
+    function renderTimeline() {
+      const order = ["commissioned", "fault", "recovered"];
+      const currentIndex = order.indexOf(state.stage);
+      const nodes = [elements.stepTune, elements.stepFault, elements.stepRecover];
+      nodes.forEach((node, index) => {
+        node.className = "";
+        if (currentIndex >= index) node.classList.add("complete");
+        if (currentIndex === index) node.classList.add("current");
+      });
+
+      if (!state.session) {
+        elements.detailTune.textContent = "Pending";
+        elements.detailFault.textContent = "Pending";
+        elements.detailRecover.textContent = "Pending";
+        return;
+      }
+
+      const tuned = state.session.stages.commissioned;
+      const fault = state.session.stages.fault;
+      const recovered = state.session.stages.recovered;
+      elements.detailTune.textContent = `${tuned.measurements} tests / ${formatError(tuned.response_error_db)}`;
+      elements.detailFault.textContent = currentIndex >= 1
+        ? `${fault.component} ${fault.change_percent > 0 ? "+" : ""}` +
+          `${fault.change_percent.toFixed(0)}% / ` +
+          `${fault.signature_ratio.toFixed(1)}× threshold`
+        : "Pending";
+      elements.detailRecover.textContent = currentIndex >= 2
+        ? `${recovered.measurements} tests / ` +
+          `${formatError(recovered.response_error_db)} / ` +
+          `${formatError(recovered.recovery_gain_db)} restored`
+        : "Pending";
+    }
+
+    function renderSearch(observations) {
+      elements.searchTrack.replaceChildren();
+      if (!observations.length) {
+        elements.bestObservation.textContent = "No measurements";
+        return;
+      }
+
+      const errors = observations.map(item => item.response_error_db);
+      const maxError = Math.max(...errors, 0.001);
+      const bestError = Math.min(...errors);
+      observations.forEach(item => {
+        const bar = document.createElement("span");
+        const normalized = item.response_error_db / maxError;
+        bar.className = "search-bar";
+        if (item.response_error_db === bestError) bar.classList.add("best");
+        bar.style.height = `${Math.max(4, normalized * 64)}px`;
+        bar.setAttribute(
+          "aria-label",
+          `Measurement ${item.measurement}: ${item.response_error_db.toFixed(3)} dB error, ` +
+          `selected by ${item.selection_method}`
+        );
+        const prediction = Number.isFinite(item.predicted_score)
+          ? ` / predicted ${item.predicted_score.toFixed(3)} ± ` +
+            `${item.predicted_uncertainty.toFixed(3)}`
+          : "";
+        bar.title =
+          `#${item.measurement}  ${item.response_error_db.toFixed(3)} dB / ` +
+          `${item.selection_method}${prediction}`;
+        elements.searchTrack.appendChild(bar);
+      });
+      elements.searchTrack.style.gridTemplateColumns =
+        `repeat(${Math.min(observations.length, 40)}, minmax(2px, 1fr))`;
+      elements.bestObservation.textContent = `Best ${bestError.toFixed(3)} dB RMS`;
+    }
+
+    function drawChart() {
+      const svg = elements.chart;
+      const width = Math.max(svg.clientWidth, 320);
+      const height = Math.max(svg.clientHeight, 280);
+      const margin = {top: 24, right: 22, bottom: 48, left: 58};
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.replaceChildren();
+
+      const frequencies = state.session?.frequency_hz || [80, 25000];
+      const xMin = Math.log10(Math.min(...frequencies));
+      const xMax = Math.log10(Math.max(...frequencies));
+      const yMin = -50;
+      const yMax = 2;
+      const x = value => margin.left + ((Math.log10(value) - xMin) / (xMax - xMin)) * plotWidth;
+      const y = value => margin.top + ((yMax - value) / (yMax - yMin)) * plotHeight;
+      const make = (name, attributes = {}) => {
+        const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+        Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, value));
+        return node;
+      };
+      const title = make("title");
+      title.textContent = "Darwin Board frequency response";
+      svg.appendChild(title);
+      const description = make("desc");
+      description.textContent = state.session
+        ? `Target and measured response at the ${state.stage} stage.`
+        : "Empty frequency response chart awaiting a tuning run.";
+      svg.appendChild(description);
+
+      const xTicks = [100, 300, 1000, 3000, 10000];
+      const yTicks = [0, -10, -20, -30, -40, -50];
+      xTicks.forEach(value => {
+        if (value < frequencies[0] || value > frequencies[frequencies.length - 1]) return;
+        svg.appendChild(make("line", {
+          x1: x(value), x2: x(value), y1: margin.top, y2: margin.top + plotHeight,
+          class: "grid-line"
+        }));
+        const label = make("text", {
+          x: x(value), y: height - 24, "text-anchor": "middle", class: "axis-text"
+        });
+        label.textContent = value >= 1000 ? `${value / 1000}k` : `${value}`;
+        svg.appendChild(label);
+      });
+      yTicks.forEach(value => {
+        svg.appendChild(make("line", {
+          x1: margin.left, x2: margin.left + plotWidth, y1: y(value), y2: y(value),
+          class: "grid-line"
+        }));
+        const label = make("text", {
+          x: margin.left - 10, y: y(value) + 3, "text-anchor": "end", class: "axis-text"
+        });
+        label.textContent = `${value}`;
+        svg.appendChild(label);
+      });
+
+      svg.appendChild(make("line", {
+        x1: margin.left, x2: margin.left + plotWidth,
+        y1: margin.top + plotHeight, y2: margin.top + plotHeight, class: "axis-line"
+      }));
+      svg.appendChild(make("line", {
+        x1: margin.left, x2: margin.left,
+        y1: margin.top, y2: margin.top + plotHeight, class: "axis-line"
+      }));
+
+      const xLabel = make("text", {
+        x: margin.left + plotWidth / 2, y: height - 6,
+        "text-anchor": "middle", class: "axis-label"
+      });
+      xLabel.textContent = "Frequency / Hz";
+      svg.appendChild(xLabel);
+
+      const yLabel = make("text", {
+        x: 13, y: margin.top + plotHeight / 2,
+        transform: `rotate(-90 13 ${margin.top + plotHeight / 2})`,
+        "text-anchor": "middle", class: "axis-label"
+      });
+      yLabel.textContent = "Gain / dB";
+      svg.appendChild(yLabel);
+
+      if (!state.session) return;
+
+      const cutoffX = x(state.session.meta.cutoff_hz);
+      svg.appendChild(make("line", {
+        x1: cutoffX, x2: cutoffX, y1: margin.top, y2: margin.top + plotHeight,
+        class: "cutoff-guide"
+      }));
+      const cutoffLabel = make("text", {
+        x: Math.min(cutoffX + 6, margin.left + plotWidth - 42),
+        y: margin.top + 13,
+        class: "axis-text"
+      });
+      cutoffLabel.textContent = `fc ${formatFrequency(state.session.meta.cutoff_hz)}`;
+      svg.appendChild(cutoffLabel);
+
+      const pathData = values => values.map((value, index) =>
+        `${index === 0 ? "M" : "L"} ${x(frequencies[index]).toFixed(2)} ${y(value).toFixed(2)}`
+      ).join(" ");
+
+      svg.appendChild(make("path", {
+        d: pathData(state.session.target_response_db),
+        class: "curve target"
+      }));
+      svg.appendChild(make("path", {
+        d: pathData(state.session.stages.commissioned.response_db),
+        class: "curve nominal"
+      }));
+      if (state.stage === "fault" || state.stage === "recovered") {
+        svg.appendChild(make("path", {
+          d: pathData(state.session.stages.fault.response_db),
+          class: "curve fault"
+        }));
+      }
+      if (state.stage === "recovered") {
+        svg.appendChild(make("path", {
+          d: pathData(state.session.stages.recovered.response_db),
+          class: "curve recovered"
+        }));
+      }
+    }
+
+    elements.cutoff.addEventListener("input", () => {
+      elements.cutoffValue.value = formatFrequency(Number(elements.cutoff.value));
+    });
+    elements.faultType.addEventListener("change", () => {
+      if (!state.session) return;
+      state.session = null;
+      state.stage = "idle";
+      state.error = null;
+      setLoading(false);
+      render();
+    });
+    elements.tune.addEventListener("click", tuneCircuit);
+    elements.fault.addEventListener("click", injectFault);
+    elements.recover.addEventListener("click", recoverCircuit);
+    elements.export.addEventListener("click", exportSession);
+    elements.themeToggle.addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme;
+      setTheme(current === "dark" ? "light" : "dark");
+    });
+    new ResizeObserver(drawChart).observe(elements.chart);
+
+    setTheme(document.documentElement.dataset.theme);
+    render();
+  </script>
+</body>
+</html>

@@ -1,77 +1,99 @@
 # Darwin Board
 
-Darwin Board is an experimental platform for self-tuning analog hardware.
-Milestone 0 controls a reconfigurable RC low-pass filter and adapts it from
-measured frequency-response data.
+Darwin Board is a self-tuning analog hardware platform. It measures a circuit,
+learns which component configuration best matches a requested response, stores
+a healthy signature, detects physical changes, and reroutes around degraded
+components.
 
-## How it works
+Milestone 0.2 models a reconfigurable RC low-pass filter with 378 possible
+component paths. A Gaussian-process optimizer searches that space from measured
+frequency-response data.
 
-1. Set a target cutoff frequency.
-2. Measure candidate resistor and capacitor configurations.
-3. Use a Gaussian-process surrogate to select the next experiment.
-4. Activate the configuration with the lowest response error.
-5. Store its measured response as a health signature.
-6. Detect component changes and run a new search when required.
+## Control loop
+
+1. Request a target cutoff frequency.
+2. Measure a small set of resistor and capacitor configurations.
+3. Use a lower-confidence-bound policy to choose each next experiment.
+4. Activate the lowest-score configuration and store its health signature.
+5. Aggregate three health sweeps to detect a persistent response change.
+6. Search the remaining hardware paths and recover the target response.
 
 The simulator includes component tolerance, measurement noise, capacitor
-faults, and resistor drift. Its interface is designed for a later USB-connected
-breadboard.
+opens, capacitor drift, and resistor drift. The same controller interface is
+intended for a USB-connected physical board.
 
-## Results
+## Evidence
 
-Thirty simulations covered ten component-tolerance profiles and target cutoffs
-of 500 Hz, 1 kHz, and 2 kHz.
+The checked-in benchmark covers 90 runs: three target cutoffs, ten tolerance
+profiles, and three fault mechanisms.
 
 | Metric | Result |
 | --- | ---: |
-| Open-capacitor faults detected | 30 / 30 |
-| Worst initial response error | 0.331 dB RMS |
-| Worst recovered response error | 0.753 dB RMS |
-| MVP error limit | 1.000 dB RMS |
+| Faults detected | 100% |
+| Recoveries below 1 dB RMS error | 100% |
+| Commissioned error, median / p95 | 0.091 / 0.297 dB |
+| Recovered error, median / p95 | 0.156 / 0.578 dB |
+| Weakest fault evidence | 2.00× threshold |
 
-## Run
+Full run-level data is available in
+[`benchmark-results.json`](benchmark-results.json).
+
+## Run the lab
 
 ```bash
-PYTHONPATH=src python3 -m darwin_board.demo
+PYTHONPATH=src python3 -m darwin_board.visualizer_server
 ```
 
-The demo tunes a 1.2 kHz filter, opens an active capacitor branch, detects the
-response change, and recovers with a new configuration. Add `--trace` to save
-the run:
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765). Choose a target, search
+budget, and fault scenario, then step through tuning, injection, and recovery.
+The lab supports light and dark themes and exports the complete experiment
+trace as JSON.
+
+Run the terminal demonstration:
 
 ```bash
 PYTHONPATH=src python3 -m darwin_board.demo --trace demo-trace.json
 ```
 
-Run the tests:
+Reproduce the benchmark:
+
+```bash
+PYTHONPATH=src python3 -m darwin_board.benchmark \
+  --seeds 10 \
+  --output benchmark-results.json
+```
+
+Run the test suite:
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
-## Layout
+## Project map
 
 ```text
 src/darwin_board/
-  model.py       Circuit configurations and target response
-  board.py       Simulator and future hardware interface
-  optimizer.py   Surrogate-guided experimental search
-  controller.py  Commissioning, monitoring, and recovery
-  demo.py        End-to-end fault-and-recovery demonstration
-tests/
-  test_recovery.py
-docs/
-  hardware-mvp.md
+  model.py              Circuit model and component bank
+  board.py              Simulator and hardware-facing protocol
+  optimizer.py          Gaussian-process experimental search
+  controller.py         Commissioning, health checks, and recovery
+  visualizer_server.py  Local lab API and experiment assembly
+  benchmark.py          Repeatable validation matrix
+  demo.py               Terminal demonstration
+visualizer/index.html   Interactive test bench
+tests/                  Controller, lab, and benchmark tests
+docs/                   Architecture and hardware plan
 ```
 
-## Next milestone
+See [`docs/architecture.md`](docs/architecture.md) for the software loop and
+[`docs/hardware-mvp.md`](docs/hardware-mvp.md) for the first physical build.
 
-Build the low-voltage RC network, waveform source, switching bank, and
-measurement path described in
-[`docs/hardware-mvp.md`](docs/hardware-mvp.md). A serial adapter will connect
-the existing controller to the physical board.
+## Physical milestone
 
-## Safety
+The next milestone connects the controller to a low-voltage RC network with a
+waveform source, switch bank, buffered measurement path, and USB serial bridge.
+Acceptance requires tuning at 500 Hz, 1 kHz, and 2 kHz, detection within two
+health cycles, and recovery below 1 dB RMS error.
 
 Operate the prototype at 3.3 V or 5 V. Keep it isolated from mains voltage,
 high-power loads, and unprotected battery packs.

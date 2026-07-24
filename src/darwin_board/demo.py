@@ -28,7 +28,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
     board = SimulatedDarwinBoard(seed=7)
     controller = DarwinController(board, requested_cutoff_hz)
 
-    print("DARWIN BOARD - MILESTONE 0")
+    print("DARWIN BOARD - MILESTONE 0.2")
     print(f"Requested response: first-order low-pass at {requested_cutoff_hz:.0f} Hz")
     print()
 
@@ -61,7 +61,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
         f"({failed_nf:g} nF) opened"
     )
 
-    health = controller.check_health()
+    health = controller.check_health(repeats=3)
     status = "FAULT DETECTED" if health.fault_detected else "healthy"
     print(
         f"Health monitor: {status}; signature changed by "
@@ -87,6 +87,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
         )
 
     trace = {
+        "schema_version": "0.2",
         "requested_cutoff_hz": requested_cutoff_hz,
         "commissioned": {
             **original,
@@ -99,6 +100,8 @@ def run_demo(trace_path: Path | None = None) -> dict:
             "nominal_capacitance_nf": failed_nf,
             "detected": health.fault_detected,
             "signature_error_db": health.signature_error_db,
+            "health_sweeps": health.repeat_count,
+            "sweep_errors_db": list(health.sweep_errors_db),
         },
         "recovered": (
             {
@@ -131,4 +134,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

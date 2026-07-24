@@ -15,6 +15,8 @@ class HealthReport:
     signature_error_db: float
     threshold_db: float
     measured_response_db: np.ndarray
+    repeat_count: int
+    sweep_errors_db: tuple[float, ...]
 
 
 class DarwinController:
@@ -52,21 +54,38 @@ class DarwinController:
         self._activate(result)
         return result
 
-    def check_health(self) -> HealthReport:
+    def check_health(self, *, repeats: int = 1) -> HealthReport:
         if self.active_configuration is None or self.healthy_signature_db is None:
             raise RuntimeError("Board must be commissioned before health checks")
-        response = self.board.measure_response_db(
-            self.active_configuration,
-            self.frequencies_hz,
+        if not 1 <= repeats <= 16:
+            raise ValueError("Health-check repeats must be between 1 and 16")
+
+        responses = np.array(
+            [
+                self.board.measure_response_db(
+                    self.active_configuration,
+                    self.frequencies_hz,
+                )
+                for _ in range(repeats)
+            ]
         )
-        signature_error = float(
-            np.sqrt(np.mean((response - self.healthy_signature_db) ** 2))
+        sweep_errors = tuple(
+            float(
+                np.sqrt(
+                    np.mean((response - self.healthy_signature_db) ** 2)
+                )
+            )
+            for response in responses
         )
+        signature_error = float(np.median(sweep_errors))
+        response = np.median(responses, axis=0)
         return HealthReport(
             fault_detected=signature_error > self.health_threshold_db,
             signature_error_db=signature_error,
             threshold_db=self.health_threshold_db,
             measured_response_db=response,
+            repeat_count=repeats,
+            sweep_errors_db=sweep_errors,
         )
 
     def recover(self, *, budget: int = 24) -> TuningResult:
@@ -87,4 +106,3 @@ class DarwinController:
             result.best.configuration,
             self.frequencies_hz,
         )
-
