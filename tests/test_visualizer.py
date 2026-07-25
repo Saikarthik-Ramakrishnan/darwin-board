@@ -1,6 +1,7 @@
 import unittest
 
 from darwin_board.visualizer_server import build_session
+from darwin_board.memory import ExperienceMemory
 
 
 class VisualizerSessionTest(unittest.TestCase):
@@ -14,7 +15,7 @@ class VisualizerSessionTest(unittest.TestCase):
             32,
         )
         self.assertTrue(session["stages"]["fault"]["detected"])
-        self.assertEqual(session["schema_version"], "0.2")
+        self.assertEqual(session["schema_version"], "0.3")
         self.assertEqual(session["stages"]["fault"]["health_sweeps"], 3)
         self.assertGreater(session["stages"]["fault"]["signature_ratio"], 1.0)
         self.assertGreater(
@@ -59,6 +60,32 @@ class VisualizerSessionTest(unittest.TestCase):
                     session["stages"]["recovered"]["response_error_db"],
                     1.0,
                 )
+
+    def test_session_warm_starts_from_experience(self) -> None:
+        memory = ExperienceMemory()
+        first = build_session(
+            cutoff_hz=1_200.0,
+            budget=16,
+            seed=7,
+            memory=memory,
+        )
+        second = build_session(
+            cutoff_hz=1_200.0,
+            budget=16,
+            seed=8,
+            memory=memory,
+        )
+
+        self.assertFalse(first["meta"]["warm_started"])
+        self.assertTrue(second["meta"]["warm_started"])
+        self.assertGreater(
+            second["meta"]["memory_records_after"],
+            first["meta"]["memory_records_before"],
+        )
+        self.assertEqual(
+            second["search"]["commissioned"][0]["selection_method"],
+            "experience memory",
+        )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Iterable
 
 import numpy as np
 
@@ -50,8 +51,13 @@ class BayesianTuner:
         *,
         budget: int = 24,
         initial_samples: int = 6,
+        preferred_configurations: Iterable[Configuration] = (),
     ) -> TuningResult:
         candidates = board.design.configurations()
+        candidate_indices_by_configuration = {
+            configuration: index
+            for index, configuration in enumerate(candidates)
+        }
         if not 1 <= budget <= len(candidates):
             raise ValueError("Budget must fit within the candidate set")
         initial_samples = min(initial_samples, budget)
@@ -68,36 +74,48 @@ class BayesianTuner:
             ]
         )
         first_index = int(np.argmin(nominal_errors))
-        initial_indices = [first_index]
-        unseen.remove(first_index)
-        if initial_samples > 1:
+        initial_plan: list[tuple[int, str]] = []
+        for configuration in preferred_configurations:
+            index = candidate_indices_by_configuration.get(configuration)
+            if index is None or index not in unseen:
+                continue
+            initial_plan.append((index, "experience memory"))
+            unseen.remove(index)
+            if len(initial_plan) == initial_samples:
+                break
+
+        if first_index in unseen and len(initial_plan) < initial_samples:
+            initial_plan.append((first_index, "nominal prior"))
+            unseen.remove(first_index)
+
+        remaining_initial_samples = initial_samples - len(initial_plan)
+        if remaining_initial_samples > 0:
             random_indices = self._rng.choice(
                 np.array(sorted(unseen)),
-                size=initial_samples - 1,
+                size=remaining_initial_samples,
                 replace=False,
             )
-            initial_indices.extend(int(index) for index in random_indices)
+            for index in random_indices:
+                initial_plan.append((int(index), "exploration seed"))
+                unseen.remove(int(index))
 
-        for sample_index, index in enumerate(initial_indices):
-            if index in unseen:
-                unseen.remove(index)
+        for index, selection_method in initial_plan:
             evaluated.append(
                 self._evaluate(
                     board,
                     candidates[index],
                     frequencies_hz,
                     target,
-                    selection_method=(
-                        "nominal prior"
-                        if sample_index == 0
-                        else "exploration seed"
-                    ),
+                    selection_method=selection_method,
                 )
             )
 
         while len(evaluated) < budget:
             measured_indices = np.array(
-                [candidates.index(item.configuration) for item in evaluated],
+                [
+                    candidate_indices_by_configuration[item.configuration]
+                    for item in evaluated
+                ],
                 dtype=int,
             )
             measured_scores = np.array([item.score for item in evaluated])

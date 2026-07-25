@@ -1,125 +1,131 @@
-# Hardware MVP: Self-Tuning RC Filter
+# Hardware MVP: ESP32 Self-Tuning RC Filter
 
-## Goal
+## Chosen path
 
-Construct a safe, low-voltage board that can select a resistance, select a
-parallel combination of capacitors, inject a known sine wave, measure the
-output amplitude, and expose those operations over USB serial.
+- Controller: original ESP32-WROOM-32 or ESP32 DevKitC
+- Construction: breadboard first
+- Measurement: equivalent-time step response
+- Initial band: roughly 300 Hz to 3 kHz
+- Lab equipment: optional for the first milestone
 
-The host controller will request a configuration and a list of frequencies.
-The board will return measured gain values. It does not need to understand the
-optimizer.
+This route uses the ESP32's internal DAC and ADC. It removes the external
+waveform-generator dependency and creates a useful intermediate result before
+college lab access.
 
 ## Functional architecture
 
 ```text
 USB host
    |
-MCU or FPGA controller
-   |-----------------------|
-   |                       |
-frequency source      switch control
-   |                       |
-input buffer -> programmable R -> switched C bank -> output buffer
-                                                   |
-                                                  ADC
+ESP32 serial protocol
+   |------------------------------|
+   |                              |
+Bayesian search              switch control
+                                  |
+GPIO25 DAC -> selectable R -> switched C bank -> GPIO34 ADC
+                                  |
+                         fitted step response
+                                  |
+                     cutoff and model-derived sweep
 ```
 
-## Recommended first implementation
+## Build in two stages
 
-- Raspberry Pi Pico/Pico 2 or a classic ESP32 development board
-- AD9833 waveform-generator module for repeatable sine sweeps
-- MCP41010 digital potentiometer, or a resistor bank selected through an
-  analog multiplexer
-- Six film/C0G capacitor branches controlled through low-leakage analog
-  switches
-- Rail-to-rail dual op-amp such as MCP6002 for input/output buffering
-- MCU ADC for synchronous amplitude measurement
-- Breadboard, decoupling capacitors, resistors, and USB cable
+### Stage 1: fixed filter
 
-An FPGA can replace the MCU later, but a microcontroller shortens the first
-measurement milestone. The optimizer remains on the host computer initially.
+Wire one 10 kΩ resistor and a 13.2 nF capacitor combination. The expected
+cutoff is about 1.21 kHz. Use the firmware's `STEP?` command to reconstruct the
+transient and estimate the cutoff.
 
-## Component-bank values
+### Stage 2: reconfigurable filter
 
-The simulator currently assumes:
+Add six resistor choices and six switched capacitor branches:
 
 - resistor taps: 2.2 kΩ, 4.7 kΩ, 10 kΩ, 22 kΩ, 47 kΩ, 100 kΩ
 - capacitor branches: 1 nF, 2.2 nF, 4.7 nF, 10 nF, 22 nF, 47 nF
 
-Capacitors are connected in parallel, giving 63 non-empty combinations. With
-six resistor choices, the MVP has 378 possible configurations.
+The capacitor branches form 63 non-empty combinations. Six resistor choices
+produce 378 available configurations.
 
-## Minimal serial protocol
+The firmware reserves GPIO21, GPIO22, and GPIO23 for resistor addressing, and
+GPIO13, GPIO14, GPIO16, GPIO17, GPIO18, and GPIO19 for capacitor controls.
+Suitable analog switches or small-signal MOSFET stages are still required
+between these control pins and the analog network.
 
-Human-readable commands are sufficient for the first board:
+## Measurement strategy
+
+For one equivalent-time measurement:
+
+1. drive GPIO25 to a low DAC level,
+2. let the filter settle,
+3. apply a high DAC level,
+4. take one GPIO34 sample after a chosen delay,
+5. repeat the transient at logarithmically spaced delays,
+6. use median samples to reject outliers,
+7. fit the exponential response and report cutoff plus fit quality.
+
+The ADC input remains on ADC1, which keeps the future option of using Wi-Fi for
+telemetry. Every analog voltage must stay within the board's safe input range.
+
+## Serial protocol
 
 ```text
 ID?
-SET R=2 C=0x15
-MEASURE 1000
-SWEEP 80 25000 32
 STATUS?
+SET R=2 C=0x15
+STEP?
+SWEEP 80 25000 32
 ```
 
 Example responses:
 
 ```text
-ID DARWIN_MVP_1
+ID DARWIN_ESP32_1
+STATUS R=2 C=0x15 FC_HZ=1187.42 FIT_R2=0.99710 TEMP_C=31.2
 OK
-GAIN_DB -2.91
-SWEEP_DB 0.00,-0.01,...,-26.40
-STATUS VCC_MV=3298 TEMP_C=31.2
+STEP TAU_US=134.04 FC_HZ=1187.42 FIT_R2=0.99710
+SWEEP_DB -0.02,-0.10,...,-26.48
 ```
 
-The future `SerialDarwinBoard` class will translate the existing Python board
-interface into these commands.
+The host `SerialDarwinBoard` adapter validates identities, timeouts, numeric
+values, point counts, and firmware errors before data enters the optimizer.
+The detailed grammar is in [`serial-protocol.md`](serial-protocol.md).
 
-## Measurement strategy
+## Fault injection
 
-For every frequency:
+The first reliable physical demonstration can use a switch in series with one
+capacitor branch. Opening that branch produces a cutoff shift that the health
+gate should detect. The controller then searches the remaining configurations
+and stores the recovered path in experience memory.
 
-1. program the AD9833,
-2. wait for the filter to settle,
-3. sample several waveform periods,
-4. remove ADC offset,
-5. estimate amplitude using sine/cosine correlation,
-6. divide by a separately measured input amplitude,
-7. return gain in dB.
+Later fault fixtures can add:
 
-Synchronous correlation is more robust than using peak-to-peak ADC readings.
+- a switched parallel capacitor for controlled drift,
+- a switched resistor for resistance drift,
+- a stuck control line,
+- a small supply change,
+- local heating for temperature sensitivity.
 
-## Built-in fault injection
+## Acceptance criteria
 
-Add a transistor or spare analog switch in series with at least one capacitor
-branch. A button or command can force that branch open. This creates a
-repeatable demonstration without physically pulling wires from a live
-breadboard.
-
-Later versions can simulate:
-
-- capacitor drift by adding a second switched capacitor,
-- resistor drift by switching a parallel resistor,
-- ADC bias,
-- stuck switch control,
-- supply-voltage variation.
-
-## First acceptance criteria
-
+- Fixed-RC cutoff within 10% of the expected value on three repeated runs.
+- Exponential fit quality above 0.95 for the clean fixed filter.
 - Tune to requested cutoffs of 500 Hz, 1 kHz, and 2 kHz.
-- Achieve less than 1 dB RMS response error over the measured frequency grid.
-- Detect an opened branch, capacitor drift, and resistor drift with no more
-  than two health cycles.
-- Restore less than 1 dB RMS error through a different configuration.
-- Report total measurements, recovery latency, selected components, supply
-  voltage, and board temperature.
+- Detect an opened branch within two health cycles.
+- Recover below 1 dB RMS model error through a different path.
+- Record measurements, selected parts, recovery latency, temperature, and fit
+  quality.
 
-## Decisions needed before hardware integration
+## Lab validation in three weeks
 
-1. Which controller is available: ESP32, Raspberry Pi Pico, or FPGA board?
-2. Is an oscilloscope or USB logic analyzer available for validation?
-3. Should the first board be breadboarded or designed immediately as a PCB?
-4. What frequency range matters for the first demonstration?
+1. Compare the reconstructed transient with an oscilloscope capture.
+2. Apply a direct sine sweep from a lab generator.
+3. Measure model residuals across the full frequency range.
+4. Calibrate DAC and ADC nonlinearity.
+5. Repeat the physical fault and recovery benchmark.
 
-Keep the prototype at 3.3 V or 5 V. Do not connect it to mains or high-power
-loads.
+The complete wiring and bring-up sequence is in
+[`esp32-build.md`](esp32-build.md).
+
+Operate at 3.3 V and share a common ground. Keep the prototype isolated from
+mains voltage, high-power loads, and unprotected batteries.

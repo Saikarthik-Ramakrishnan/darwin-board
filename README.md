@@ -1,31 +1,33 @@
 # Darwin Board
 
-Darwin Board is a self-tuning analog hardware platform. It measures a circuit,
-learns which component configuration best matches a requested response, stores
-a healthy signature, detects physical changes, and reroutes around degraded
-components.
+![Darwin Board system](docs/assets/darwin-board-system.svg)
 
-Milestone 0.2 models a reconfigurable RC low-pass filter with 378 possible
-component paths. A Gaussian-process optimizer searches that space from measured
-frequency-response data.
+Darwin Board is a self-tuning analog circuit. It learns which component path
+best matches a requested response, remembers useful configurations, detects
+physical changes, and reroutes itself around degraded parts.
 
-## Control loop
+Milestone 0.3 includes a tested digital twin, an interactive experiment lab,
+experience-guided tuning, a hardware serial adapter, and firmware for a classic
+ESP32 development board.
 
-1. Request a target cutoff frequency.
-2. Measure a small set of resistor and capacitor configurations.
-3. Use a lower-confidence-bound policy to choose each next experiment.
-4. Activate the lowest-score configuration and store its health signature.
-5. Aggregate three health sweeps to detect a persistent response change.
-6. Search the remaining hardware paths and recover the target response.
+## What makes it interesting
 
-The simulator includes component tolerance, measurement noise, capacitor
-opens, capacitor drift, and resistor drift. The same controller interface is
-intended for a USB-connected physical board.
+- **Closed-loop hardware search:** the software chooses each physical
+  experiment from real response measurements.
+- **Experience memory:** successful configurations become starting points for
+  later searches.
+- **Self-characterization without lab instruments:** the ESP32 repeatedly
+  applies a voltage step and samples a different point on each response. Those
+  points reconstruct the filter transient and estimate its cutoff.
+- **Autonomous recovery:** a persistent response change triggers a search for a
+  healthy alternate component path.
+- **Traceable decisions:** every measurement, uncertainty estimate, health
+  decision, and recovery step can be exported.
 
-## Evidence
+## Current evidence
 
-The checked-in benchmark covers 90 runs: three target cutoffs, ten tolerance
-profiles, and three fault mechanisms.
+The checked-in benchmark covers 90 simulated boards: three target cutoffs, ten
+tolerance profiles, and three physical fault mechanisms.
 
 | Metric | Result |
 | --- | ---: |
@@ -35,36 +37,60 @@ profiles, and three fault mechanisms.
 | Recovered error, median / p95 | 0.156 / 0.578 dB |
 | Weakest fault evidence | 2.00× threshold |
 
-Full run-level data is available in
-[`benchmark-results.json`](benchmark-results.json).
+Full run-level evidence is stored in
+[`benchmark-results.json`](benchmark-results.json). These results validate the
+algorithm in simulation. Physical measurements are the next evidence
+milestone.
 
-## Run the lab
+## Run the interactive lab
 
 ```bash
+python3 -m pip install -e .
 PYTHONPATH=src python3 -m darwin_board.visualizer_server
 ```
 
-Open [http://127.0.0.1:8765](http://127.0.0.1:8765). Choose a target, search
-budget, and fault scenario, then step through tuning, injection, and recovery.
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765) and select **Run
+autonomous cycle**. Run a second cycle to see experience memory guide the
+search. The lab supports light and dark themes and exports the experiment as
+JSON.
 
-Run the terminal demonstration:
-
-```bash
-PYTHONPATH=src python3 -m darwin_board.demo --trace demo-trace.json
-```
-
-Reproduce the benchmark:
+Run the tests and reproduce the benchmark:
 
 ```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 -m darwin_board.benchmark \
   --seeds 10 \
   --output benchmark-results.json
 ```
 
-Run the test suite:
+## ESP32 prototype
+
+The first physical build targets the original ESP32-WROOM-32 or ESP32 DevKitC.
+It uses:
+
+- GPIO25 as the internal 8-bit DAC output
+- GPIO34 as the ADC1 measurement input
+- equivalent-time step sampling to estimate the RC time constant
+- a breadboarded fixed RC filter before the full switch bank
+
+No oscilloscope or external waveform generator is required for the first
+measurement milestone. See [`docs/esp32-build.md`](docs/esp32-build.md) for the
+wiring, bill of materials, and three-week validation path.
+
+Firmware:
 
 ```bash
-PYTHONPATH=src python3 -m unittest discover -s tests -v
+cd firmware/esp32
+pio run
+pio run --target upload
+pio device monitor
+```
+
+Host probe:
+
+```bash
+python3 -m pip install -e '.[hardware]'
+darwin-board-probe /dev/cu.usbserial-0001
 ```
 
 ## Project map
@@ -74,16 +100,20 @@ src/darwin_board/
   model.py              Circuit model and component bank
   board.py              Simulator and hardware-facing protocol
   optimizer.py          Gaussian-process experimental search
+  memory.py             Persistent configuration experience
   controller.py         Commissioning, health checks, and recovery
+  serial_board.py       Validated USB serial hardware adapter
   visualizer_server.py  Local lab API and experiment assembly
   benchmark.py          Repeatable validation matrix
-  demo.py               Terminal demonstration
-visualizer/index.html   Interactive test bench
-tests/                  Controller, lab, and benchmark tests
-docs/                   Architecture and hardware plan
+firmware/esp32/          ESP32 measurement and switch-control firmware
+visualizer/index.html   Interactive experiment lab
+tests/                  Controller, memory, serial, and lab tests
+docs/                   Architecture, build guide, protocol, and demo script
 ```
 
-See [`docs/architecture.md`](docs/architecture.md) for the software loop and
-[`docs/hardware-mvp.md`](docs/hardware-mvp.md) for the first physical build.
+Start with [`docs/architecture.md`](docs/architecture.md) for the complete
+loop, [`docs/esp32-build.md`](docs/esp32-build.md) for the prototype, and
+[`docs/linkedin-demo.md`](docs/linkedin-demo.md) for a clear public demo.
 
-#
+Operate the prototype at 3.3 V. Keep every signal within the ESP32 input range
+and isolate it from mains voltage, high-power loads, and unprotected batteries.

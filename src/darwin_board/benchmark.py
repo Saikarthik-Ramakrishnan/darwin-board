@@ -82,7 +82,7 @@ def run_benchmark(
     recoveries = recovered_errors < 1.0
 
     return {
-        "schema_version": "0.2",
+        "schema_version": "0.3",
         "parameters": {
             "targets_hz": list(targets_hz),
             "seeds": list(seeds),

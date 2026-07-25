@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2",
+  "schema_version": "0.3",
   "requested_cutoff_hz": 1200.0,
   "commissioned": {
     "resistor_index": 0,
@@ -38,7 +38,7 @@
       3
     ],
     "nominal_resistance_ohms": 10000.0,
-    "nominal_capacitance_nf": 13.200000000000001,
+    "nominal_capacitance_nf": 13.2,
     "physical_cutoff_hz": 1233.6396504444742,
     "response_error_db": 0.16349240503060267,
     "measurements": 24

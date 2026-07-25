@@ -767,7 +767,7 @@
         </div>
       </div>
       <div class="topbar-meta">
-        <div class="version">SIMULATION / M0.2</div>
+        <div class="version">DIGITAL TWIN / M0.3</div>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">
           <span class="theme-icon" aria-hidden="true"></span>
           <span id="theme-label" class="theme-label">Dark mode</span>
@@ -805,7 +805,8 @@
         </label>
 
         <div class="actions">
-          <button id="tune" class="primary" type="button">Tune circuit</button>
+          <button id="autopilot" class="primary" type="button">Run autonomous cycle</button>
+          <button id="tune" type="button">Tune only</button>
           <button id="fault" class="danger" type="button" disabled>Inject fault</button>
           <button id="recover" type="button" disabled>Recover</button>
           <button id="export" type="button" disabled>Export trace</button>
@@ -915,6 +916,10 @@
                   <th scope="row">Diagnostic evidence</th>
                   <td id="signature-delta">--</td>
                 </tr>
+                <tr>
+                  <th scope="row">Experience memory</th>
+                  <td id="memory-count">0 learned paths</td>
+                </tr>
               </tbody>
             </table>
             <p id="diagnostic-note" class="diagnostic-note">
@@ -954,6 +959,7 @@
       session: null,
       stage: "idle",
       loading: false,
+      autoplay: false,
       error: null
     };
 
@@ -962,6 +968,7 @@
       cutoffValue: document.getElementById("cutoff-value"),
       budget: document.getElementById("budget"),
       faultType: document.getElementById("fault-type"),
+      autopilot: document.getElementById("autopilot"),
       tune: document.getElementById("tune"),
       fault: document.getElementById("fault"),
       recover: document.getElementById("recover"),
@@ -982,6 +989,7 @@
       capacitance: document.getElementById("capacitance"),
       activeBranches: document.getElementById("active-branches"),
       signatureDelta: document.getElementById("signature-delta"),
+      memoryCount: document.getElementById("memory-count"),
       diagnosticNote: document.getElementById("diagnostic-note"),
       schematicR: document.getElementById("schematic-r"),
       schematicC: document.getElementById("schematic-c"),
@@ -1041,17 +1049,22 @@
 
     function setLoading(loading) {
       state.loading = loading;
+      elements.autopilot.disabled = loading;
       elements.tune.disabled = loading;
       elements.fault.disabled = loading || state.stage !== "commissioned";
       elements.recover.disabled = loading || state.stage !== "fault";
       elements.export.disabled = loading || !state.session;
       elements.faultType.disabled = loading;
-      elements.tune.textContent = loading ? "Running..." : "Tune circuit";
+      elements.autopilot.textContent =
+        loading && state.autoplay
+          ? "Running cycle..."
+          : "Run autonomous cycle";
+      elements.tune.textContent =
+        loading && !state.autoplay ? "Tuning..." : "Tune only";
       document.querySelector(".status-strip").classList.toggle("loading", loading);
     }
 
-    async function tuneCircuit() {
-      setLoading(true);
+    async function requestSession() {
       state.error = null;
       try {
         const response = await fetch("/api/session", {
@@ -1070,14 +1083,44 @@
         state.session = payload;
         state.stage = "commissioned";
         render();
+        return true;
       } catch (error) {
         state.session = null;
         state.stage = "idle";
         state.error = error.message;
         render();
-      } finally {
-        setLoading(false);
+        return false;
       }
+    }
+
+    async function tuneCircuit() {
+      state.autoplay = false;
+      setLoading(true);
+      await requestSession();
+      setLoading(false);
+    }
+
+    function stagePause() {
+      const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      return new Promise(resolve => {
+        window.setTimeout(resolve, reducedMotion ? 80 : 900);
+      });
+    }
+
+    async function runAutonomousCycle() {
+      state.autoplay = true;
+      setLoading(true);
+      const ready = await requestSession();
+      if (ready) {
+        await stagePause();
+        state.stage = "fault";
+        render();
+        await stagePause();
+        state.stage = "recovered";
+        render();
+      }
+      state.autoplay = false;
+      setLoading(false);
     }
 
     function injectFault() {
@@ -1150,7 +1193,9 @@
       };
       elements.measurementCount.textContent = measurementCounts[state.stage];
       if (state.stage === "commissioned") {
-        elements.evidenceValue.textContent = "Baseline stored";
+        elements.evidenceValue.textContent = state.session.meta.warm_started
+          ? "Memory guided"
+          : "Cold search";
       } else if (state.stage === "fault") {
         elements.evidenceValue.textContent =
           `${stage.signature_ratio.toFixed(1)}× threshold`;
@@ -1174,6 +1219,7 @@
         elements.capacitance.textContent = "--";
         elements.activeBranches.textContent = "--";
         elements.signatureDelta.textContent = "--";
+        elements.memoryCount.textContent = "0 learned paths";
         elements.schematicR.textContent = "R --";
         elements.schematicC.textContent = "C --";
         elements.schematicFault.textContent = "";
@@ -1192,6 +1238,9 @@
       elements.activeBranches.textContent = configuration.active_capacitors
         .map(index => `C${index + 1}`)
         .join(", ");
+      elements.memoryCount.textContent =
+        `${state.session.meta.memory_records_after} learned ` +
+        `${state.session.meta.memory_records_after === 1 ? "path" : "paths"}`;
       if (state.stage === "fault") {
         elements.signatureDelta.textContent =
           `${formatError(stage.signature_error_db)} / ${stage.health_sweeps} sweeps`;
@@ -1207,8 +1256,10 @@
           `${state.session.meta.candidate_count} candidates.`;
       } else {
         elements.signatureDelta.textContent = "Baseline stored";
-        elements.diagnosticNote.textContent =
-          `Monitoring uses ${state.session.meta.health_sweeps} median-aggregated sweeps.`;
+        elements.diagnosticNote.textContent = state.session.meta.warm_started
+          ? "Search opened with a configuration remembered from an earlier run."
+          : `Cold search completed; monitoring uses ` +
+            `${state.session.meta.health_sweeps} median-aggregated sweeps.`;
       }
       elements.schematicR.textContent = `R ${formatResistance(configuration.nominal_resistance_ohms)}`;
       elements.schematicC.textContent = `C ${formatCapacitance(configuration.nominal_capacitance_nf)}`;
@@ -1251,7 +1302,12 @@
       const tuned = state.session.stages.commissioned;
       const fault = state.session.stages.fault;
       const recovered = state.session.stages.recovered;
-      elements.detailTune.textContent = `${tuned.measurements} tests / ${formatError(tuned.response_error_db)}`;
+      const searchOrigin = state.session.meta.warm_started
+        ? "memory start"
+        : "cold start";
+      elements.detailTune.textContent =
+        `${searchOrigin} / ${tuned.measurements} tests / ` +
+        `${formatError(tuned.response_error_db)}`;
       elements.detailFault.textContent = currentIndex >= 1
         ? `${fault.component} ${fault.change_percent > 0 ? "+" : ""}` +
           `${fault.change_percent.toFixed(0)}% / ` +
@@ -1296,7 +1352,11 @@
       });
       elements.searchTrack.style.gridTemplateColumns =
         `repeat(${Math.min(observations.length, 40)}, minmax(2px, 1fr))`;
-      elements.bestObservation.textContent = `Best ${bestError.toFixed(3)} dB RMS`;
+      const memoryLabel = state.session.meta.warm_started
+        ? "Memory-guided / "
+        : "";
+      elements.bestObservation.textContent =
+        `${memoryLabel}best ${bestError.toFixed(3)} dB RMS`;
     }
 
     function drawChart() {
@@ -1432,6 +1492,7 @@
       setLoading(false);
       render();
     });
+    elements.autopilot.addEventListener("click", runAutonomousCycle);
     elements.tune.addEventListener("click", tuneCircuit);
     elements.fault.addEventListener("click", injectFault);
     elements.recover.addEventListener("click", recoverCircuit);

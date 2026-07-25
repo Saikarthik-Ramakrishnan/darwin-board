@@ -28,7 +28,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
     board = SimulatedDarwinBoard(seed=7)
     controller = DarwinController(board, requested_cutoff_hz)
 
-    print("DARWIN BOARD - MILESTONE 0.2")
+    print("DARWIN BOARD - MILESTONE 0.3")
     print(f"Requested response: first-order low-pass at {requested_cutoff_hz:.0f} Hz")
     print()
 
@@ -87,7 +87,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
         )
 
     trace = {
-        "schema_version": "0.2",
+        "schema_version": "0.3",
         "requested_cutoff_hz": requested_cutoff_hz,
         "commissioned": {
             **original,
@@ -122,7 +122,9 @@ def run_demo(trace_path: Path | None = None) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Darwin Board milestone 0")
+    parser = argparse.ArgumentParser(
+        description="Run the Darwin Board milestone 0.3 demonstration"
+    )
     parser.add_argument(
         "--trace",
         type=Path,

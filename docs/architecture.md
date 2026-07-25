@@ -1,43 +1,78 @@
 # Architecture
 
-Darwin Board separates experimental policy from physical measurement. The
-optimizer asks for circuit responses through a small board protocol, so the
-same control loop can run against the simulator or a USB-connected prototype.
+Darwin Board separates experimental policy from physical measurement. The same
+control loop can operate a simulated circuit or a USB-connected ESP32
+prototype.
 
-## Runtime loop
+## Complete loop
 
 ```text
-target response
-      |
-      v
-Bayesian tuner ---- candidate configuration
-      ^                        |
-      |                        v
-measured error <---- DarwinBoard interface
-                               |
-                     simulator or USB board
+requested cutoff
+       |
+       v
+experience memory --> Bayesian tuner --> candidate component path
+                            ^                       |
+                            |                       v
+                     measured error <------ DarwinBoard interface
+                                                    |
+                                      simulator or ESP32 hardware
+                                                    |
+                                  response signature and health gate
+                                                    |
+                                  fault detected --> recovery search
 ```
 
-Commissioning evaluates a limited set of the 378 available component paths.
-The first experiment follows the nominal RC model. Five space-filling probes
-establish an initial data set. Later experiments minimize a lower confidence
-bound:
+The component bank contains six resistor choices and 63 non-empty parallel
+capacitor combinations, giving 378 possible paths.
+
+## Learning a configuration
+
+Experience memory first offers configurations that performed well near the
+requested cutoff. A nominal RC estimate and space-filling probes complete the
+initial sample set. Later experiments minimize a lower confidence bound:
 
 ```text
 predicted score - exploration weight × predicted uncertainty
 ```
 
-This balances promising configurations with uncertain regions of the hardware
-space. Each evaluation records the selection method, predicted score,
-uncertainty, measured response error, and power penalty.
+This lets the tuner investigate both promising paths and uncertain regions.
+Each evaluation records the selection method, prediction, uncertainty,
+measured response error, and power penalty.
+
+The selected configuration and its measured score are added to bounded
+experience memory, which can be saved as JSON. A repeated request can therefore
+begin with prior physical experience while still verifying the result on the
+current board.
+
+## Measuring without an oscilloscope
+
+The ESP32 firmware uses equivalent-time step sampling:
+
+1. hold the DAC at a low level and let the RC network settle,
+2. apply the same voltage step,
+3. wait for one selected delay and take an ADC sample,
+4. reset the circuit and repeat at another delay,
+5. combine the delayed samples into one reconstructed transient,
+6. fit the transient to estimate the RC time constant and cutoff.
+
+For a first-order low-pass filter:
+
+```text
+V(t) = Vfinal - (Vfinal - Vinitial) × exp(-t / tau)
+cutoff = 1 / (2 × pi × tau)
+```
+
+The reconstructed cutoff produces a model-derived response curve for the host
+optimizer. This is suitable for the breadboard milestone. A direct sine sweep
+in the college lab will later measure model mismatch and establish physical
+accuracy.
 
 ## Health and recovery
 
-After commissioning, the controller stores a fresh measured response as the
-healthy signature. A health check performs three sweeps and uses the median
-response and median signature error. This reduces sensitivity to isolated
-measurement noise while keeping the detector simple enough to reproduce on a
-microcontroller.
+After commissioning, the controller stores a fresh response as the healthy
+signature. A health check performs three sweeps and compares their median
+response with that signature. Requiring persistent evidence reduces false
+alarms from individual noisy samples.
 
 ```text
 healthy signature
@@ -48,46 +83,53 @@ median RMS signature error
        |
 threshold gate
        |
-reconfigure and retune
+alternate path search
+       |
+new signature and memory record
 ```
 
-The lab currently exercises three physical mechanisms:
+The current lab covers three physical mechanisms:
 
 | Scenario | Injected change | Expected response |
 | --- | ---: | --- |
-| Open capacitor branch | −100% branch capacitance | Cutoff rises |
-| Capacitor drift | −45% branch capacitance | Cutoff rises |
-| Resistor drift | +50% active resistance | Cutoff falls |
+| Open capacitor branch | 100% loss of branch capacitance | Cutoff rises |
+| Capacitor drift | 45% loss of branch capacitance | Cutoff rises |
+| Resistor drift | 50% increase in active resistance | Cutoff falls |
 
-Detection is evidence for a response change. The simulator also knows the
-injected mechanism so the interface can compare the physical cause with the
-measured cutoff shift.
+The detector only uses measured response change. Fault labels exist in the
+simulator so test results can compare the hidden cause with the observed
+effect.
 
 ## Module boundaries
 
 - `model.py` defines the circuit space and ideal responses.
-- `board.py` owns measurement behavior and injectable physical faults.
-- `optimizer.py` chooses experiments and records decision evidence.
-- `controller.py` manages commissioning, signature checks, and recovery.
-- `visualizer_server.py` assembles a complete experiment for the local lab.
-- `benchmark.py` validates the loop across targets, tolerances, and faults.
+- `board.py` provides the simulator and common board contract.
+- `optimizer.py` selects experiments and records decision evidence.
+- `memory.py` stores and ranks prior successful configurations.
+- `controller.py` manages commissioning, health checks, and recovery.
+- `serial_board.py` validates the line protocol used by physical hardware.
+- `visualizer_server.py` assembles complete experiments for the local lab.
+- `benchmark.py` validates targets, tolerances, and faults.
+- `firmware/esp32` measures transients and controls component selections.
 
 ## Hardware boundary
 
-The future serial adapter only needs to implement the `DarwinBoard`
-measurement protocol:
+Both backends implement:
 
 ```python
 measure_response_db(configuration, frequencies_hz) -> response_db
 ```
 
-Switch control, waveform generation, ADC sampling, and calibration stay behind
-that boundary. The optimizer and recovery policy remain unchanged.
+Switch control, ADC sampling, transient fitting, and calibration remain behind
+that boundary. This keeps the optimizer and recovery policy independent of the
+measurement electronics.
 
-## Next technical milestone
+## Evidence ladder
 
-1. Add a `SerialDarwinBoard` adapter with timeouts and protocol validation.
-2. Calibrate the input and output measurement paths with a loopback fixture.
-3. Store temperature and supply voltage with every response signature.
-4. Compare simulated and physical response residuals on the same benchmark.
-5. Move the health gate onto the microcontroller after the host loop is stable.
+1. **Complete:** deterministic tests of search, memory, fault detection, serial
+   validation, and lab data.
+2. **Complete:** 90-run digital-twin benchmark.
+3. **Next:** fixed-RC ESP32 step measurement on a breadboard.
+4. **Then:** six-resistor and six-capacitor switch fabric.
+5. **College lab:** direct frequency sweep and oscilloscope comparison.
+6. **Final:** physical fault benchmark and compact PCB.

@@ -11,6 +11,7 @@ import numpy as np
 
 from .board import SimulatedDarwinBoard
 from .controller import DarwinController
+from .memory import ExperienceMemory
 from .model import Configuration, target_response_db
 from .optimizer import Evaluation, TuningResult
 
@@ -128,6 +129,7 @@ def build_session(
     seed: int = 7,
     fault_kind: str = "open_capacitor",
     health_sweeps: int = 3,
+    memory: ExperienceMemory | None = None,
 ) -> dict[str, Any]:
     if not 100.0 <= cutoff_hz <= 10_000.0:
         raise ValueError("cutoff_hz must be between 100 and 10000")
@@ -142,7 +144,13 @@ def build_session(
         raise ValueError("health_sweeps must be between 1 and 8")
 
     board = SimulatedDarwinBoard(seed=seed)
-    controller = DarwinController(board, cutoff_hz=cutoff_hz)
+    memory_records_before = len(memory) if memory is not None else 0
+    controller = DarwinController(
+        board,
+        cutoff_hz=cutoff_hz,
+        memory=memory,
+        board_id=f"SIM-{seed:06d}",
+    )
     frequencies = controller.frequencies_hz
     target = target_response_db(frequencies, cutoff_hz)
 
@@ -178,9 +186,14 @@ def build_session(
     ) * 100.0
     recovery_gain_db = fault_error - recovered_error
     fault["cutoff_shift_percent"] = cutoff_shift_percent
+    memory_records_after = len(memory) if memory is not None else 0
+    warm_started = any(
+        evaluation.selection_method == "experience memory"
+        for evaluation in commissioned.evaluations
+    )
 
     return {
-        "schema_version": "0.2",
+        "schema_version": "0.3",
         "meta": {
             "cutoff_hz": cutoff_hz,
             "budget": budget,
@@ -189,6 +202,9 @@ def build_session(
             "health_sweeps": health_sweeps,
             "total_measurements": board.measurement_count,
             "candidate_count": len(board.design.configurations()),
+            "memory_records_before": memory_records_before,
+            "memory_records_after": memory_records_after,
+            "warm_started": warm_started,
         },
         "frequency_hz": frequencies.tolist(),
         "target_response_db": target.tolist(),
@@ -235,7 +251,8 @@ def build_session(
 
 
 class VisualizerHandler(BaseHTTPRequestHandler):
-    server_version = "DarwinBoard/0.2"
+    server_version = "DarwinBoard/0.3"
+    experience_memory = ExperienceMemory()
 
     def do_GET(self) -> None:
         if self.path in {"/", "/index.html"}:
@@ -268,6 +285,7 @@ class VisualizerHandler(BaseHTTPRequestHandler):
                     request.get("fault_kind", "open_capacitor")
                 ),
                 health_sweeps=int(request.get("health_sweeps", 3)),
+                memory=self.experience_memory,
             )
         except (TypeError, ValueError, json.JSONDecodeError) as error:
             self._send_json({"error": str(error)}, status=400)

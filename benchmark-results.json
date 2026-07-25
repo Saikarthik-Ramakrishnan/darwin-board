@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2",
+  "schema_version": "0.3",
   "parameters": {
     "targets_hz": [
       500.0,
@@ -370,8 +370,8 @@
       "commissioned_error_db": 0.07772418749797731,
       "fault_error_db": 2.3339957517447703,
       "signature_ratio": 3.2119148459073226,
-      "recovered_error_db": 0.303165076940168,
-      "recovery_gain_db": 2.0308306748046023,
+      "recovered_error_db": 0.3031650769401674,
+      "recovery_gain_db": 2.0308306748046028,
       "total_measurements": 53
     },
     {
@@ -382,8 +382,8 @@
       "commissioned_error_db": 0.07772418749797731,
       "fault_error_db": 6.959205425689692,
       "signature_ratio": 9.377782589135679,
-      "recovered_error_db": 0.05708043639395712,
-      "recovery_gain_db": 6.902124989295735,
+      "recovered_error_db": 0.05708043639395851,
+      "recovery_gain_db": 6.902124989295734,
       "total_measurements": 53
     },
     {
@@ -466,8 +466,8 @@
       "commissioned_error_db": 0.08593253935068008,
       "fault_error_db": 2.417853717226905,
       "signature_ratio": 3.3324528208718953,
-      "recovered_error_db": 0.09451192998772028,
-      "recovery_gain_db": 2.3233417872391846,
+      "recovered_error_db": 0.0945119299877215,
+      "recovery_gain_db": 2.3233417872391837,
       "total_measurements": 53
     },
     {
@@ -511,11 +511,11 @@
       "seed": 3,
       "fault_kind": "capacitor_drift",
       "fault_detected": true,
-      "commissioned_error_db": 0.028592612021249,
-      "fault_error_db": 2.077954913408271,
-      "signature_ratio": 2.7834111500516143,
+      "commissioned_error_db": 0.028592612021249582,
+      "fault_error_db": 2.0779549134082704,
+      "signature_ratio": 2.783411150051615,
       "recovered_error_db": 0.4111484048721806,
-      "recovery_gain_db": 1.6668065085360904,
+      "recovery_gain_db": 1.66680650853609,
       "total_measurements": 53
     },
     {
@@ -523,9 +523,9 @@
       "seed": 3,
       "fault_kind": "open_capacitor",
       "fault_detected": true,
-      "commissioned_error_db": 0.028592612021249,
+      "commissioned_error_db": 0.028592612021249582,
       "fault_error_db": 5.944995069547293,
-      "signature_ratio": 7.937419227375655,
+      "signature_ratio": 7.937419227375657,
       "recovered_error_db": 0.05339288483485993,
       "recovery_gain_db": 5.891602184712433,
       "total_measurements": 53
@@ -535,11 +535,11 @@
       "seed": 3,
       "fault_kind": "resistor_drift",
       "fault_detected": true,
-      "commissioned_error_db": 0.028592612021249,
-      "fault_error_db": 2.521989726528171,
-      "signature_ratio": 3.3493046730804434,
+      "commissioned_error_db": 0.028592612021249582,
+      "fault_error_db": 2.5219897265281723,
+      "signature_ratio": 3.3493046730804443,
       "recovered_error_db": 0.2638633847313772,
-      "recovery_gain_db": 2.258126341796794,
+      "recovery_gain_db": 2.258126341796795,
       "total_measurements": 53
     },
     {
@@ -814,7 +814,7 @@
       "commissioned_error_db": 0.23268450375061286,
       "fault_error_db": 3.9269822045866234,
       "signature_ratio": 5.542489045340509,
-      "recovered_error_db": 0.7549117931787753,
+      "recovered_error_db": 0.7549117931787755,
       "recovery_gain_db": 3.172070411407848,
       "total_measurements": 53
     },
@@ -1114,8 +1114,8 @@
       "commissioned_error_db": 0.15198903997224658,
       "fault_error_db": 2.031161920448951,
       "signature_ratio": 2.907352860982174,
-      "recovered_error_db": 0.3305006207835082,
-      "recovery_gain_db": 1.7006612996654427,
+      "recovered_error_db": 0.3305006207835091,
+      "recovery_gain_db": 1.7006612996654418,
       "total_measurements": 53
     }
   ]
