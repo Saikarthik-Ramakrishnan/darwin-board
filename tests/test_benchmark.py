@@ -1,6 +1,7 @@
 import unittest
 
 from darwin_board.benchmark import run_benchmark
+from darwin_board.evidence import verify_payload
 
 
 class BenchmarkTest(unittest.TestCase):
@@ -16,6 +17,7 @@ class BenchmarkTest(unittest.TestCase):
         self.assertEqual(result["summary"]["fault_detection_rate"], 1.0)
         self.assertEqual(result["summary"]["recovery_success_rate"], 1.0)
         self.assertEqual(len(result["records"]), 2)
+        self.assertTrue(verify_payload(result))
 
 
 if __name__ == "__main__":

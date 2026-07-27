@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .board import SimulatedDarwinBoard
 from .controller import DarwinController
+from .evidence import seal_payload
 
 
 def describe_configuration(board: SimulatedDarwinBoard, configuration) -> dict:
@@ -14,6 +15,10 @@ def describe_configuration(board: SimulatedDarwinBoard, configuration) -> dict:
     return {
         "resistor_index": configuration.resistor_index,
         "capacitor_mask": configuration.capacitor_mask,
+        "genotype": (
+            f"R{configuration.resistor_index + 1}:"
+            f"C{configuration.capacitor_mask:06b}"
+        ),
         "active_capacitors": list(
             configuration.active_capacitors(len(board.design.capacitor_farads))
         ),
@@ -28,7 +33,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
     board = SimulatedDarwinBoard(seed=7)
     controller = DarwinController(board, requested_cutoff_hz)
 
-    print("DARWIN BOARD - MILESTONE 0.3")
+    print("DARWIN BOARD - MILESTONE 0.4")
     print(f"Requested response: first-order low-pass at {requested_cutoff_hz:.0f} Hz")
     print()
 
@@ -86,8 +91,8 @@ def run_demo(trace_path: Path | None = None) -> dict:
             f"Recovered response error={recovered.best.response_error_db:.3f} dB"
         )
 
-    trace = {
-        "schema_version": "0.3",
+    trace = seal_payload({
+        "schema_version": "0.4",
         "requested_cutoff_hz": requested_cutoff_hz,
         "commissioned": {
             **original,
@@ -113,7 +118,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
             else None
         ),
         "total_board_measurements": board.measurement_count,
-    }
+    })
     if trace_path is not None:
         trace_path.write_text(json.dumps(trace, indent=2) + "\n")
         print()
@@ -123,7 +128,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run the Darwin Board milestone 0.3 demonstration"
+        description="Run the Darwin Board milestone 0.4 demonstration"
     )
     parser.add_argument(
         "--trace",

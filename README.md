@@ -22,11 +22,12 @@ measurement and decision is kept in the exported experiment trace.
 
 ## Current status
 
-Milestone 0.3 includes:
+Milestone 0.4 includes:
 
 - a tested digital twin
 - an interactive tuning and recovery lab
 - persistent configuration memory
+- SHA-256 sealed experiment exports
 - a USB serial adapter
 - compiled firmware for a classic ESP32
 
@@ -42,6 +43,11 @@ tolerance profiles, and three fault types.
 
 These are simulation results. Physical validation is the next milestone. The
 complete data is in [`benchmark-results.json`](benchmark-results.json).
+Reference run: `DB-37D93BFA138D`.
+
+```bash
+darwin-board-verify benchmark-results.json
+```
 
 ## Run the lab
 
@@ -90,6 +96,8 @@ The build guide, wiring, and parts list are in
   validation
 - [`docs/serial-protocol.md`](docs/serial-protocol.md): ESP32 command protocol
 - [`docs/linkedin-demo.md`](docs/linkedin-demo.md): short demonstration script
+- [`docs/hackathon-submission.md`](docs/hackathon-submission.md): Devpost copy,
+  demo plan, and judging checklist
 
 Keep the prototype at 3.3 V and isolate it from mains voltage and high-power
 loads.

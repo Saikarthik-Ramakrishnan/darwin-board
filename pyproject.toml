@@ -1,6 +1,6 @@
 [project]
 name = "darwin-board"
-version = "0.3.0"
+version = "0.4.0"
 description = "Self-tuning, fault-aware reconfigurable circuit prototype"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
@@ -13,6 +13,7 @@ darwin-board-demo = "darwin_board.demo:main"
 darwin-board-lab = "darwin_board.visualizer_server:main"
 darwin-board-benchmark = "darwin_board.benchmark:main"
 darwin-board-probe = "darwin_board.serial_board:main"
+darwin-board-verify = "darwin_board.evidence:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

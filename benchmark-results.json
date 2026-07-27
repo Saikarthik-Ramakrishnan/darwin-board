@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.3",
+  "schema_version": "0.4",
   "parameters": {
     "targets_hz": [
       500.0,
@@ -1118,5 +1118,10 @@
       "recovery_gain_db": 1.7006612996654418,
       "total_measurements": 53
     }
-  ]
+  ],
+  "evidence": {
+    "run_id": "DB-37D93BFA138D",
+    "payload_sha256": "37d93bfa138df53be562337abf5b093ea8e4379ec0adfe7c22490ad49c02deca",
+    "algorithm": "SHA-256"
+  }
 }

@@ -19,7 +19,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e .
       - run: python -m unittest discover -s tests -v
-      - run: python -m darwin_board.benchmark --seeds 3
+      - run: darwin-board-benchmark --seeds 3 --output ci-benchmark.json
+      - run: darwin-board-verify ci-benchmark.json
 
   esp32:
     runs-on: ubuntu-latest

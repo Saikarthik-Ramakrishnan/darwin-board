@@ -767,7 +767,7 @@
         </div>
       </div>
       <div class="topbar-meta">
-        <div class="version">DIGITAL TWIN / M0.3</div>
+        <div class="version">DIGITAL TWIN / M0.4</div>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">
           <span class="theme-icon" aria-hidden="true"></span>
           <span id="theme-label" class="theme-label">Dark mode</span>
@@ -809,7 +809,7 @@
           <button id="tune" type="button">Tune only</button>
           <button id="fault" class="danger" type="button" disabled>Inject fault</button>
           <button id="recover" type="button" disabled>Recover</button>
-          <button id="export" type="button" disabled>Export trace</button>
+          <button id="export" type="button" disabled>Export proof</button>
         </div>
       </section>
 
@@ -913,12 +913,20 @@
                   <td id="active-branches">--</td>
                 </tr>
                 <tr>
+                  <th scope="row">Hardware genotype</th>
+                  <td id="genotype">--</td>
+                </tr>
+                <tr>
                   <th scope="row">Diagnostic evidence</th>
                   <td id="signature-delta">--</td>
                 </tr>
                 <tr>
                   <th scope="row">Experience memory</th>
                   <td id="memory-count">0 learned paths</td>
+                </tr>
+                <tr>
+                  <th scope="row">Run proof</th>
+                  <td id="proof-id">Not generated</td>
                 </tr>
               </tbody>
             </table>
@@ -988,8 +996,10 @@
       resistance: document.getElementById("resistance"),
       capacitance: document.getElementById("capacitance"),
       activeBranches: document.getElementById("active-branches"),
+      genotype: document.getElementById("genotype"),
       signatureDelta: document.getElementById("signature-delta"),
       memoryCount: document.getElementById("memory-count"),
+      proofId: document.getElementById("proof-id"),
       diagnosticNote: document.getElementById("diagnostic-note"),
       schematicR: document.getElementById("schematic-r"),
       schematicC: document.getElementById("schematic-c"),
@@ -1146,7 +1156,7 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `darwin-board-${state.session.stages.fault.kind}.json`;
+      link.download = `${state.session.evidence.run_id.toLowerCase()}.json`;
       link.click();
       URL.revokeObjectURL(url);
     }
@@ -1218,8 +1228,11 @@
         elements.resistance.textContent = "--";
         elements.capacitance.textContent = "--";
         elements.activeBranches.textContent = "--";
+        elements.genotype.textContent = "--";
         elements.signatureDelta.textContent = "--";
         elements.memoryCount.textContent = "0 learned paths";
+        elements.proofId.textContent = "Not generated";
+        elements.proofId.removeAttribute("title");
         elements.schematicR.textContent = "R --";
         elements.schematicC.textContent = "C --";
         elements.schematicFault.textContent = "";
@@ -1238,9 +1251,14 @@
       elements.activeBranches.textContent = configuration.active_capacitors
         .map(index => `C${index + 1}`)
         .join(", ");
+      elements.genotype.textContent = configuration.genotype;
       elements.memoryCount.textContent =
         `${state.session.meta.memory_records_after} learned ` +
         `${state.session.meta.memory_records_after === 1 ? "path" : "paths"}`;
+      elements.proofId.textContent = state.session.evidence.run_id;
+      elements.proofId.title =
+        `${state.session.evidence.algorithm} ` +
+        `${state.session.evidence.payload_sha256}`;
       if (state.stage === "fault") {
         elements.signatureDelta.textContent =
           `${formatError(stage.signature_error_db)} / ${stage.health_sweeps} sweeps`;
@@ -1252,8 +1270,10 @@
         elements.signatureDelta.textContent =
           `${formatError(stage.recovery_gain_db)} restored`;
         elements.diagnosticNote.textContent =
-          `Recovery selected a new path from ` +
-          `${state.session.meta.candidate_count} candidates.`;
+          `Recovery changed ${stage.mutation_distance} switching ` +
+          `${stage.mutation_distance === 1 ? "gene" : "genes"} and ` +
+          `${stage.fault_bypassed ? "bypassed" : "compensated for"} ` +
+          `${state.session.stages.fault.component}.`;
       } else {
         elements.signatureDelta.textContent = "Baseline stored";
         elements.diagnosticNote.textContent = state.session.meta.warm_started
@@ -1315,6 +1335,7 @@
         : "Pending";
       elements.detailRecover.textContent = currentIndex >= 2
         ? `${recovered.measurements} tests / ` +
+          `${recovered.mutation_distance} switch mutations / ` +
           `${formatError(recovered.response_error_db)} / ` +
           `${formatError(recovered.recovery_gain_db)} restored`
         : "Pending";

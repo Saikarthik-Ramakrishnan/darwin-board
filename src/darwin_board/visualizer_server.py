@@ -11,6 +11,7 @@ import numpy as np
 
 from .board import SimulatedDarwinBoard
 from .controller import DarwinController
+from .evidence import seal_payload
 from .memory import ExperienceMemory
 from .model import Configuration, target_response_db
 from .optimizer import Evaluation, TuningResult
@@ -34,6 +35,10 @@ def _configuration_payload(
     return {
         "resistor_index": configuration.resistor_index,
         "capacitor_mask": configuration.capacitor_mask,
+        "genotype": (
+            f"R{configuration.resistor_index + 1}:"
+            f"C{configuration.capacitor_mask:06b}"
+        ),
         "active_capacitors": list(
             configuration.active_capacitors(len(board.design.capacitor_farads))
         ),
@@ -185,6 +190,30 @@ def build_session(
         - 1.0
     ) * 100.0
     recovery_gain_db = fault_error - recovered_error
+    changed_capacitors = [
+        index
+        for index in range(len(board.design.capacitor_farads))
+        if (
+            commissioned_configuration.capacitor_mask
+            ^ recovered_configuration.capacitor_mask
+        )
+        & (1 << index)
+    ]
+    resistor_changed = (
+        commissioned_configuration.resistor_index
+        != recovered_configuration.resistor_index
+    )
+    mutation_distance = len(changed_capacitors) + int(resistor_changed)
+    if fault_kind in {"open_capacitor", "capacitor_drift"}:
+        fault_bypassed = not (
+            recovered_configuration.capacitor_mask
+            & (1 << int(fault["component_index"]))
+        )
+    else:
+        fault_bypassed = (
+            recovered_configuration.resistor_index
+            != int(fault["component_index"])
+        )
     fault["cutoff_shift_percent"] = cutoff_shift_percent
     memory_records_after = len(memory) if memory is not None else 0
     warm_started = any(
@@ -192,9 +221,11 @@ def build_session(
         for evaluation in commissioned.evaluations
     )
 
-    return {
-        "schema_version": "0.3",
+    session = {
+        "schema_version": "0.4",
         "meta": {
+            "backend": "digital_twin",
+            "engine_version": "0.4.0",
             "cutoff_hz": cutoff_hz,
             "budget": budget,
             "seed": seed,
@@ -241,6 +272,10 @@ def build_session(
                 "response_error_db": recovered_error,
                 "measurements": len(recovered.evaluations),
                 "recovery_gain_db": recovery_gain_db,
+                "mutation_distance": mutation_distance,
+                "resistor_changed": resistor_changed,
+                "changed_capacitors": changed_capacitors,
+                "fault_bypassed": fault_bypassed,
             },
         },
         "search": {
@@ -248,10 +283,11 @@ def build_session(
             "recovered": _search_payload(board, recovered),
         },
     }
+    return seal_payload(session)
 
 
 class VisualizerHandler(BaseHTTPRequestHandler):
-    server_version = "DarwinBoard/0.3"
+    server_version = "DarwinBoard/0.4"
     experience_memory = ExperienceMemory()
 
     def do_GET(self) -> None:

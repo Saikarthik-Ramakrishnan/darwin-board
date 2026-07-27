@@ -1,5 +1,6 @@
 import unittest
 
+from darwin_board.evidence import verify_payload
 from darwin_board.visualizer_server import build_session
 from darwin_board.memory import ExperienceMemory
 
@@ -15,7 +16,9 @@ class VisualizerSessionTest(unittest.TestCase):
             32,
         )
         self.assertTrue(session["stages"]["fault"]["detected"])
-        self.assertEqual(session["schema_version"], "0.3")
+        self.assertEqual(session["schema_version"], "0.4")
+        self.assertTrue(verify_payload(session))
+        self.assertEqual(session["meta"]["backend"], "digital_twin")
         self.assertEqual(session["stages"]["fault"]["health_sweeps"], 3)
         self.assertGreater(session["stages"]["fault"]["signature_ratio"], 1.0)
         self.assertGreater(
@@ -28,6 +31,14 @@ class VisualizerSessionTest(unittest.TestCase):
         )
         self.assertEqual(len(session["search"]["commissioned"]), 24)
         self.assertEqual(len(session["search"]["recovered"]), 24)
+        self.assertRegex(
+            session["stages"]["commissioned"]["configuration"]["genotype"],
+            r"^R[1-6]:C[01]{6}$",
+        )
+        self.assertGreaterEqual(
+            session["stages"]["recovered"]["mutation_distance"],
+            1,
+        )
 
     def test_session_validates_controls(self) -> None:
         with self.assertRaises(ValueError):

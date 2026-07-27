@@ -19,7 +19,7 @@
   </defs>
 
   <rect width="1200" height="560" rx="18" fill="#101216"/>
-  <text x="54" y="52" class="label">DARWIN BOARD / MILESTONE 0.3</text>
+  <text x="54" y="52" class="label">DARWIN BOARD / MILESTONE 0.4</text>
   <text x="54" y="88" class="title">A circuit that learns, remembers, and recovers</text>
 
   <rect x="54" y="145" width="205" height="120" rx="10" class="box"/>

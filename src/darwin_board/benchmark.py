@@ -7,6 +7,7 @@ from typing import Any, Iterable
 
 import numpy as np
 
+from .evidence import seal_payload
 from .visualizer_server import FAULT_KINDS, build_session
 
 
@@ -81,8 +82,8 @@ def run_benchmark(
     )
     recoveries = recovered_errors < 1.0
 
-    return {
-        "schema_version": "0.3",
+    report = {
+        "schema_version": "0.4",
         "parameters": {
             "targets_hz": list(targets_hz),
             "seeds": list(seeds),
@@ -111,6 +112,7 @@ def run_benchmark(
         },
         "records": records,
     }
+    return seal_payload(report)
 
 
 def _print_summary(result: dict[str, Any]) -> None:

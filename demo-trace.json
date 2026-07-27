@@ -1,9 +1,10 @@
 {
-  "schema_version": "0.3",
+  "schema_version": "0.4",
   "requested_cutoff_hz": 1200.0,
   "commissioned": {
     "resistor_index": 0,
     "capacitor_mask": 43,
+    "genotype": "R1:C101011",
     "active_capacitors": [
       0,
       1,
@@ -32,6 +33,7 @@
   "recovered": {
     "resistor_index": 2,
     "capacitor_mask": 11,
+    "genotype": "R3:C001011",
     "active_capacitors": [
       0,
       1,
@@ -43,5 +45,10 @@
     "response_error_db": 0.16349240503060267,
     "measurements": 24
   },
-  "total_board_measurements": 53
+  "total_board_measurements": 53,
+  "evidence": {
+    "run_id": "DB-1D85877F41AA",
+    "payload_sha256": "1d85877f41aaeaad0236c9b89a1bbe15af9cb1e1b4eacc102a0be4264076abf6",
+    "algorithm": "SHA-256"
+  }
 }

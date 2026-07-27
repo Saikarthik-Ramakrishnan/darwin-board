@@ -44,6 +44,21 @@ experience memory, which can be saved as JSON. A repeated request can therefore
 begin with prior physical experience while still verifying the result on the
 current board.
 
+## Genotype and evidence
+
+Each switching state is represented as a compact hardware genotype. For
+example, `R3:C010101` selects resistor path 3 and a six-bit capacitor mask.
+Recovery records the Hamming distance between the commissioned and recovered
+genotypes, the changed capacitor branches, and whether the failed path was
+bypassed.
+
+Experiment and benchmark exports use canonical JSON ordering and a SHA-256
+digest. The digest produces a short run ID and can be checked with:
+
+```bash
+darwin-board-verify benchmark-results.json
+```
+
 ## Measuring without an oscilloscope
 
 The ESP32 firmware uses equivalent-time step sampling:
@@ -106,6 +121,7 @@ effect.
 - `board.py` provides the simulator and common board contract.
 - `optimizer.py` selects experiments and records decision evidence.
 - `memory.py` stores and ranks prior successful configurations.
+- `evidence.py` seals and verifies exported experiment data.
 - `controller.py` manages commissioning, health checks, and recovery.
 - `serial_board.py` validates the line protocol used by physical hardware.
 - `visualizer_server.py` assembles complete experiments for the local lab.
