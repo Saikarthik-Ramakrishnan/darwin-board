@@ -95,8 +95,10 @@ The detailed grammar is in [`serial-protocol.md`](serial-protocol.md).
 
 The first reliable physical demonstration can use a switch in series with one
 capacitor branch. Opening that branch produces a cutoff shift that the health
-gate should detect. The controller then searches the remaining configurations
-and stores the recovered path in experience memory.
+gate should detect. Before activation, the controller measures fallback routes
+that avoid each active component. After the fault, it probes that reserve and
+starts a wider search only if every reserved response misses the recovery
+limit.
 
 Later fault fixtures can add:
 
@@ -113,6 +115,7 @@ Later fault fixtures can add:
 - Tune to requested cutoffs of 500 Hz, 1 kHz, and 2 kHz.
 - Detect an opened branch within two health cycles.
 - Recover below 1 dB RMS model error through a different path.
+- Demonstrate a reserved-route recovery before a full search.
 - Record measurements, selected parts, recovery latency, temperature, and fit
   quality.
 

@@ -146,6 +146,26 @@ class BayesianTuner:
         best = min(evaluated, key=lambda item: item.score)
         return TuningResult(best=best, evaluations=tuple(evaluated))
 
+    def evaluate(
+        self,
+        board: DarwinBoard,
+        frequencies_hz: np.ndarray,
+        cutoff_hz: float,
+        configuration: Configuration,
+        *,
+        selection_method: str,
+    ) -> Evaluation:
+        """Measure one chosen route using the same score as the tuner."""
+
+        target = target_response_db(frequencies_hz, cutoff_hz)
+        return self._evaluate(
+            board,
+            configuration,
+            frequencies_hz,
+            target,
+            selection_method=selection_method,
+        )
+
     def _features(
         self,
         board: DarwinBoard,

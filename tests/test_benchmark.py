@@ -16,6 +16,11 @@ class BenchmarkTest(unittest.TestCase):
         self.assertEqual(result["summary"]["runs"], 2)
         self.assertEqual(result["summary"]["fault_detection_rate"], 1.0)
         self.assertEqual(result["summary"]["recovery_success_rate"], 1.0)
+        self.assertEqual(result["summary"]["reflex_recovery_rate"], 1.0)
+        self.assertEqual(
+            result["summary"]["minimum_contingency_coverage_percent"],
+            100.0,
+        )
         self.assertEqual(len(result["records"]), 2)
         self.assertTrue(verify_payload(result))
 

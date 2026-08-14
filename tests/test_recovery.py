@@ -15,12 +15,17 @@ class DarwinBoardRecoveryTest(unittest.TestCase):
             commissioned.evaluations[0].selection_method,
             "nominal prior",
         )
-        self.assertEqual(
-            commissioned.evaluations[-1].selection_method,
-            "lower confidence bound",
+        self.assertTrue(
+            any(
+                item.selection_method == "lower confidence bound"
+                for item in commissioned.evaluations
+            )
         )
-        self.assertIsNotNone(
-            commissioned.evaluations[-1].predicted_uncertainty
+        self.assertTrue(
+            any(
+                item.predicted_uncertainty is not None
+                for item in commissioned.evaluations
+            )
         )
 
         active = commissioned.best.configuration.active_capacitors(

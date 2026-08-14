@@ -58,6 +58,18 @@ def run_benchmark(
                         "recovery_gain_db": stages["recovered"][
                             "recovery_gain_db"
                         ],
+                        "recovery_mode": stages["recovered"][
+                            "recovery_mode"
+                        ],
+                        "recovery_measurements": stages["recovered"][
+                            "measurements"
+                        ],
+                        "search_measurements_avoided": stages["recovered"][
+                            "search_measurements_avoided"
+                        ],
+                        "contingency_coverage_percent": session[
+                            "resilience"
+                        ]["coverage_percent"],
                         "total_measurements": session["meta"][
                             "total_measurements"
                         ],
@@ -81,9 +93,25 @@ def run_benchmark(
         dtype=bool,
     )
     recoveries = recovered_errors < 1.0
+    reflex_recoveries = np.array(
+        [
+            record["recovery_mode"] == "prequalified reflex"
+            for record in records
+        ],
+        dtype=bool,
+    )
+    recovery_measurements = np.array(
+        [record["recovery_measurements"] for record in records]
+    )
+    avoided_measurements = np.array(
+        [record["search_measurements_avoided"] for record in records]
+    )
+    contingency_coverage = np.array(
+        [record["contingency_coverage_percent"] for record in records]
+    )
 
     report = {
-        "schema_version": "0.4",
+        "schema_version": "0.5",
         "parameters": {
             "targets_hz": list(targets_hz),
             "seeds": list(seeds),
@@ -95,6 +123,16 @@ def run_benchmark(
             "runs": len(records),
             "fault_detection_rate": float(detections.mean()),
             "recovery_success_rate": float(recoveries.mean()),
+            "reflex_recovery_rate": float(reflex_recoveries.mean()),
+            "median_recovery_measurements": float(
+                np.median(recovery_measurements)
+            ),
+            "median_search_measurements_avoided": float(
+                np.median(avoided_measurements)
+            ),
+            "minimum_contingency_coverage_percent": float(
+                contingency_coverage.min()
+            ),
             "median_commissioned_error_db": float(
                 np.median(commissioned_errors)
             ),
@@ -126,6 +164,18 @@ def _print_summary(result: dict[str, Any]) -> None:
     print(
         "Recovery under 1 dB RMS: "
         f"{summary['recovery_success_rate'] * 100.0:.1f}%"
+    )
+    print(
+        "Pre-qualified reflex recovery: "
+        f"{summary['reflex_recovery_rate'] * 100.0:.1f}%"
+    )
+    print(
+        "Recovery probes, median: "
+        f"{summary['median_recovery_measurements']:.1f}"
+    )
+    print(
+        "Search measurements avoided, median: "
+        f"{summary['median_search_measurements_avoided']:.1f}"
     )
     print(
         "Commissioned error, median / p95: "

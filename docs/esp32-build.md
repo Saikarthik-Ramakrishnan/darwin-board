@@ -112,6 +112,8 @@ After the fixed filter is stable:
 3. Connect the reserved switching GPIOs from the firmware.
 4. Measure the effective resistance of every closed switch path.
 5. Add that resistance to the digital twin.
+6. Pre-qualify two escape routes for every component in the active path.
+7. Open one capacitor branch and compare reflex latency with a fresh search.
 
 The current firmware reserves:
 

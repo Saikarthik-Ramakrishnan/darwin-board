@@ -3,8 +3,8 @@
 ## Core line
 
 > I built a circuit architecture that can learn a configuration, remember what
-> worked, detect when its behavior changes, and recover through another
-> hardware path.
+> worked, qualify escape routes before activation, and react through a measured
+> backup path when its behavior changes.
 
 ## 45-second screen recording
 
@@ -25,7 +25,16 @@ Voice:
 > It searches 378 resistor and capacitor paths using uncertainty-aware Bayesian
 > optimization.
 
-### 15 to 25 seconds
+### 15 to 24 seconds
+
+Pause on the failure pre-mortem.
+
+Voice:
+
+> Before activation, it measures backup routes for every component in the
+> selected path. This run enters service with complete single-fault coverage.
+
+### 24 to 32 seconds
 
 Pause visually on the fault curve and threshold evidence.
 
@@ -34,16 +43,16 @@ Voice:
 > The controller stores a healthy response, detects a component change from
 > three repeated sweeps, and measures how strong the evidence is.
 
-### 25 to 35 seconds
+### 32 to 40 seconds
 
 Show the recovered curve and the new component path.
 
 Voice:
 
-> It then reroutes around the degraded component and restores the requested
-> response.
+> It probes the small reserve, reroutes around the degraded component, and
+> restores the response without starting another full search.
 
-### 35 to 45 seconds
+### 40 to 45 seconds
 
 Run the same target again so the interface shows **Memory guided**.
 
@@ -62,19 +71,22 @@ Darwin Board is my answer so far.
 
 The current milestone is a hardware-ready digital twin of a reconfigurable RC
 filter with 378 possible configurations. A Gaussian-process optimizer chooses
-which physical experiment to run next. The controller stores a measured health
-signature, detects capacitor or resistor changes, and searches for another path
-that restores the target response.
+which physical experiment to run next. Before activation, a pre-mortem measures
+escape routes for every component in the selected path. If the response later
+changes, the controller probes that small reserve before starting another
+search.
 
 Current simulation benchmark:
 
 - 90 runs across three targets, ten tolerance profiles, and three faults
 - 100% fault detection
 - 100% recovery below 1 dB RMS error
-- 0.156 dB median recovered error
+- 100% recovery through the pre-qualified reflex
+- 4 recovery probes at the median
+- 20 search measurements avoided at the median
+- 0.048 dB median recovered error
 
-I also added experience memory, so later searches can start from configurations
-that worked under similar targets.
+I also added experience memory and SHA-256 sealed run evidence.
 
 The physical bridge is now defined for a classic ESP32. Since I do not currently
 have a waveform generator or oscilloscope, the first firmware reconstructs the

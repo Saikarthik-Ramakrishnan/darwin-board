@@ -13,13 +13,15 @@ requested cutoff
 experience memory --> Bayesian tuner --> candidate component path
                             ^                       |
                             |                       v
-                     measured error <------ DarwinBoard interface
+                     measured error <------ pre-mortem qualification
+                                                    |
+                                      measured escape-route reserve
                                                     |
                                       simulator or ESP32 hardware
                                                     |
                                   response signature and health gate
                                                     |
-                                  fault detected --> recovery search
+                                  fault detected --> reserved reflex
 ```
 
 The component bank contains six resistor choices and 63 non-empty parallel
@@ -43,6 +45,25 @@ The selected configuration and its measured score are added to bounded
 experience memory, which can be saved as JSON. A repeated request can therefore
 begin with prior physical experience while still verifying the result on the
 current board.
+
+## Planning before failure
+
+After the normal search, the controller performs a pre-mortem. It lists every
+component used by the proposed primary route, then measures alternative routes
+that avoid each one. The controller can accept up to 0.20 dB of primary-response
+tradeoff when that produces stronger escape routes.
+
+The resulting contingency atlas records:
+
+- every active component that could interrupt the route,
+- two measured fallback candidates for each failure point,
+- the switching mutation required to reach each fallback,
+- the worst preflight response error,
+- single-fault coverage before activation.
+
+The board therefore enters service with measured options already in reserve.
+This planning uses real response measurements and does not require knowing
+which component will fail.
 
 ## Genotype and evidence
 
@@ -98,7 +119,11 @@ median RMS signature error
        |
 threshold gate
        |
-alternate path search
+probe reserved routes
+       |
+acceptable route? ---- no ----> adaptive search
+       |
+      yes
        |
 new signature and memory record
 ```
@@ -115,6 +140,13 @@ The detector only uses measured response change. Fault labels exist in the
 simulator so test results can compare the hidden cause with the observed
 effect.
 
+The first recovery action is a blind reflex. The controller probes the small
+set of pre-qualified routes and selects the best measured response. A full
+Bayesian search remains available when no reserved route meets the recovery
+limit. In the current 90-run digital-twin benchmark, every tested fault was
+handled by the reserve with a median of four probes, avoiding a median of 20
+search measurements.
+
 ## Module boundaries
 
 - `model.py` defines the circuit space and ideal responses.
@@ -122,6 +154,7 @@ effect.
 - `optimizer.py` selects experiments and records decision evidence.
 - `memory.py` stores and ranks prior successful configurations.
 - `evidence.py` seals and verifies exported experiment data.
+- `resilience.py` builds the contingency atlas and ranks safe primary routes.
 - `controller.py` manages commissioning, health checks, and recovery.
 - `serial_board.py` validates the line protocol used by physical hardware.
 - `visualizer_server.py` assembles complete experiments for the local lab.
@@ -145,7 +178,8 @@ measurement electronics.
 1. **Complete:** deterministic tests of search, memory, fault detection, serial
    validation, and lab data.
 2. **Complete:** 90-run digital-twin benchmark.
-3. **Next:** fixed-RC ESP32 step measurement on a breadboard.
-4. **Then:** six-resistor and six-capacitor switch fabric.
-5. **College lab:** direct frequency sweep and oscilloscope comparison.
-6. **Final:** physical fault benchmark and compact PCB.
+3. **Complete:** pre-mortem qualification and reserved-reflex benchmark.
+4. **Next:** fixed-RC ESP32 step measurement on a breadboard.
+5. **Then:** six-resistor and six-capacitor switch fabric.
+6. **College lab:** direct frequency sweep and oscilloscope comparison.
+7. **Final:** physical fault benchmark and compact PCB.

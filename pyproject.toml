@@ -1,7 +1,7 @@
 [project]
 name = "darwin-board"
-version = "0.4.0"
-description = "Self-tuning, fault-aware reconfigurable circuit prototype"
+version = "0.5.0"
+description = "Pre-mortem, self-tuning reconfigurable circuit prototype"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
 

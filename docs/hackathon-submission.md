@@ -22,9 +22,10 @@ reconfiguration.
 
 Darwin Board treats circuit configuration as an experimental search problem.
 It measures candidate resistor and capacitor paths, uses Bayesian optimization
-to choose each next test, stores the best measured response, and monitors that
-response over time. When the behavior changes, it searches the remaining paths
-and restores the requested cutoff.
+to choose each next test, then performs a failure pre-mortem. Before activation,
+it measures escape routes that avoid every component in the selected path. When
+the behavior changes, it probes that small reserve and restores the requested
+cutoff.
 
 Each configuration has a compact hardware genotype such as
 `R3:C010101`. Recovery is recorded as a mutation from the original genotype.
@@ -36,7 +37,8 @@ the evidence can be checked after export.
 - Search across 378 hardware configurations
 - Experience memory for later tuning runs
 - Median-aggregated health checks
-- Recovery around capacitor and resistor faults
+- Measured single-fault contingency atlas
+- Pre-qualified reflex recovery
 - Hardware genotype and recovery mutation distance
 - SHA-256 sealed experiment exports
 - Interactive light and dark lab
@@ -63,7 +65,10 @@ exports.
 - three physical fault models
 - 100% fault detection
 - 100% recovery below 1 dB RMS response error
-- 19 automated tests
+- 100% recovery through the pre-qualified reflex
+- four recovery probes at the median
+- 20 search measurements avoided at the median
+- 22 automated tests
 - ESP32 firmware compiled for `esp32dev`
 
 The benchmark is simulation evidence. Physical measurements should be labeled
@@ -83,7 +88,8 @@ Show the empty lab and set a 1.2 kHz target.
 Select **Run autonomous cycle** and pause on the tuned response.
 
 > A Bayesian tuner chooses which hardware configuration to measure next. It
-> stores the best response and remembers the successful hardware genotype.
+> stores the best response, then measures escape routes for every component in
+> the selected hardware genotype.
 
 ### 30 to 48 seconds
 
@@ -96,8 +102,9 @@ Show the injected fault and threshold evidence.
 
 Show the recovered curve, new genotype, and mutation count.
 
-> The controller searches the remaining paths, mutates the switching
-> configuration, and restores the requested response.
+> The controller probes its measured reserve, mutates the switching
+> configuration, and restores the requested response without another full
+> search.
 
 ### 66 to 78 seconds
 
@@ -118,7 +125,7 @@ Show the ESP32 firmware and fixed-RC breadboard if available.
 | Criterion | Current proof | Highest-value addition |
 | --- | --- | --- |
 | Execution, 30% | Tests, benchmark, compiled firmware, CI | Record one real ESP32 transient |
-| Originality, 25% | Adaptive circuit, memory, genotype recovery | Show the same target on two component paths |
+| Originality, 25% | Adaptive circuit, pre-mortem, reserved reflex | Show the same target on two component paths |
 | Impact, 20% | Resilient low-cost electronics use case | Name one concrete sensor or edge-device scenario |
 | UX, 15% | One-click lab, dark mode, proof export | Capture a clean 1080p demo |
 | Presentation, 10% | Diagram, concise README, evidence data | Add three annotated screenshots |
@@ -149,9 +156,3 @@ After breadboard validation:
 - measured ESP32 cutoff
 - physical fault detection
 - physical recovery
-
-## Deadline check
-
-The Devpost overview currently displays **August 29, 2026 at 11:45 PM PDT**.
-The rules page still lists **July 29, 2026 at 9:00 PM PDT**. Use the earlier
-deadline until the organizer confirms that the rules page is stale.

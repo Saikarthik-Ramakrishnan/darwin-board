@@ -15,6 +15,7 @@ from .evidence import seal_payload
 from .memory import ExperienceMemory
 from .model import Configuration, target_response_db
 from .optimizer import Evaluation, TuningResult
+from .resilience import ResiliencePlan
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -66,6 +67,37 @@ def _search_payload(
         }
         for index, evaluation in enumerate(result.evaluations, start=1)
     ]
+
+
+def _resilience_payload(
+    board: SimulatedDarwinBoard,
+    plan: ResiliencePlan,
+    qualification_measurements: int,
+) -> dict[str, Any]:
+    return {
+        "strategy": "pre-mortem qualification",
+        "coverage_percent": plan.coverage * 100.0,
+        "fallback_error_limit_db": plan.fallback_error_limit_db,
+        "failure_points": [
+            component.label for component in plan.failure_points
+        ],
+        "qualified_route_count": len(plan.fallbacks),
+        "qualification_measurements": qualification_measurements,
+        "worst_preflight_error_db": plan.worst_fallback_error_db,
+        "primary_tradeoff_db": plan.performance_tradeoff_db,
+        "contingencies": [
+            {
+                "failed_component": item.failed_component.label,
+                "fallback": _configuration_payload(
+                    board,
+                    item.fallback.configuration,
+                ),
+                "preflight_error_db": item.fallback.response_error_db,
+                "mutation_distance": item.mutation_distance,
+            }
+            for item in plan.contingencies
+        ],
+    }
 
 
 def _response_error(response: np.ndarray, target: np.ndarray) -> float:
@@ -160,11 +192,19 @@ def build_session(
     target = target_response_db(frequencies, cutoff_hz)
 
     commissioned = controller.commission(budget=budget)
+    contingency_plan = controller.contingency_plan
+    if contingency_plan is None:
+        raise RuntimeError("Commissioning did not produce a resilience plan")
     commissioned_configuration = commissioned.best.configuration
     commissioned_response = np.array(controller.healthy_signature_db, copy=True)
     commissioned_details = _configuration_payload(
         board,
         commissioned_configuration,
+    )
+    resilience = _resilience_payload(
+        board,
+        contingency_plan,
+        controller.qualification_measurements,
     )
 
     fault = _inject_fault(board, commissioned_configuration, fault_kind)
@@ -174,7 +214,8 @@ def build_session(
         commissioned_configuration,
     )
 
-    recovered = controller.recover(budget=budget)
+    recovery = controller.recover_resiliently(budget=budget)
+    recovered = recovery.result
     recovered_configuration = recovered.best.configuration
     recovered_response = np.array(controller.healthy_signature_db, copy=True)
     recovered_details = _configuration_payload(
@@ -222,10 +263,10 @@ def build_session(
     )
 
     session = {
-        "schema_version": "0.4",
+        "schema_version": "0.5",
         "meta": {
             "backend": "digital_twin",
-            "engine_version": "0.4.0",
+            "engine_version": "0.5.0",
             "cutoff_hz": cutoff_hz,
             "budget": budget,
             "seed": seed,
@@ -246,6 +287,7 @@ def build_session(
                 for capacitance in board.design.capacitor_farads
             ],
         },
+        "resilience": resilience,
         "stages": {
             "commissioned": {
                 "configuration": commissioned_details,
@@ -276,6 +318,18 @@ def build_session(
                 "resistor_changed": resistor_changed,
                 "changed_capacitors": changed_capacitors,
                 "fault_bypassed": fault_bypassed,
+                "recovery_mode": recovery.mode,
+                "attempted_fallbacks": recovery.attempted_fallbacks,
+                "full_search_used": recovery.full_search_used,
+                "search_measurements_avoided": (
+                    recovery.search_measurements_avoided
+                ),
+                "reflex_speedup": (
+                    budget / recovery.attempted_fallbacks
+                    if not recovery.full_search_used
+                    and recovery.attempted_fallbacks
+                    else 1.0
+                ),
             },
         },
         "search": {
@@ -287,7 +341,7 @@ def build_session(
 
 
 class VisualizerHandler(BaseHTTPRequestHandler):
-    server_version = "DarwinBoard/0.4"
+    server_version = "DarwinBoard/0.5"
     experience_memory = ExperienceMemory()
 
     def do_GET(self) -> None:

@@ -1,54 +1,60 @@
 {
-  "schema_version": "0.4",
+  "schema_version": "0.5",
   "requested_cutoff_hz": 1200.0,
   "commissioned": {
-    "resistor_index": 0,
-    "capacitor_mask": 43,
-    "genotype": "R1:C101011",
+    "resistor_index": 1,
+    "capacitor_mask": 20,
+    "genotype": "R2:C010100",
     "active_capacitors": [
-      0,
+      2,
+      4
+    ],
+    "nominal_resistance_ohms": 4700.0,
+    "nominal_capacitance_nf": 26.7,
+    "physical_cutoff_hz": 1233.5423121579122,
+    "response_error_db": 0.16093803997268236,
+    "measurements": 30
+  },
+  "resilience": {
+    "coverage_percent": 100.0,
+    "qualified_route_count": 2,
+    "qualification_measurements": 6,
+    "worst_preflight_error_db": 0.029242629902237235
+  },
+  "fault": {
+    "type": "open_capacitor",
+    "capacitor_index": 4,
+    "nominal_capacitance_nf": 22.0,
+    "detected": true,
+    "signature_error_db": 8.166285384236339,
+    "health_sweeps": 3,
+    "sweep_errors_db": [
+      8.166285384236339,
+      8.161581759716537,
+      8.170012095675435
+    ]
+  },
+  "recovered": {
+    "resistor_index": 0,
+    "capacitor_mask": 42,
+    "genotype": "R1:C101010",
+    "active_capacitors": [
       1,
       3,
       5
     ],
     "nominal_resistance_ohms": 2200.0,
-    "nominal_capacitance_nf": 60.199999999999996,
-    "physical_cutoff_hz": 1185.6247993177485,
-    "response_error_db": 0.0798160930629869,
-    "measurements": 24
+    "nominal_capacitance_nf": 59.2,
+    "physical_cutoff_hz": 1205.4528704233994,
+    "response_error_db": 0.032653047972236636,
+    "measurements": 2,
+    "recovery_mode": "prequalified reflex",
+    "search_measurements_avoided": 22
   },
-  "fault": {
-    "type": "open_capacitor",
-    "capacitor_index": 5,
-    "nominal_capacitance_nf": 47.0,
-    "detected": true,
-    "signature_error_db": 7.435896327267406,
-    "health_sweeps": 3,
-    "sweep_errors_db": [
-      7.424392978449751,
-      7.435896327267406,
-      7.441795904508059
-    ]
-  },
-  "recovered": {
-    "resistor_index": 2,
-    "capacitor_mask": 11,
-    "genotype": "R3:C001011",
-    "active_capacitors": [
-      0,
-      1,
-      3
-    ],
-    "nominal_resistance_ohms": 10000.0,
-    "nominal_capacitance_nf": 13.2,
-    "physical_cutoff_hz": 1233.6396504444742,
-    "response_error_db": 0.16349240503060267,
-    "measurements": 24
-  },
-  "total_board_measurements": 53,
+  "total_board_measurements": 37,
   "evidence": {
-    "run_id": "DB-1D85877F41AA",
-    "payload_sha256": "1d85877f41aaeaad0236c9b89a1bbe15af9cb1e1b4eacc102a0be4264076abf6",
+    "run_id": "DB-6CC292639F81",
+    "payload_sha256": "6cc292639f81c688093e5de95f35db608feb222d8d08cfbe0d5aa486fe1ed876",
     "algorithm": "SHA-256"
   }
 }

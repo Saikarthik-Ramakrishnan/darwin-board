@@ -33,11 +33,14 @@ def run_demo(trace_path: Path | None = None) -> dict:
     board = SimulatedDarwinBoard(seed=7)
     controller = DarwinController(board, requested_cutoff_hz)
 
-    print("DARWIN BOARD - MILESTONE 0.4")
+    print("DARWIN BOARD - MILESTONE 0.5")
     print(f"Requested response: first-order low-pass at {requested_cutoff_hz:.0f} Hz")
     print()
 
     commissioned = controller.commission(budget=24)
+    resilience_plan = controller.contingency_plan
+    if resilience_plan is None:
+        raise RuntimeError("Commissioning did not produce a resilience plan")
     original_configuration = commissioned.best.configuration
     original = describe_configuration(board, original_configuration)
     print(
@@ -49,6 +52,11 @@ def run_demo(trace_path: Path | None = None) -> dict:
     print(
         f"Response error={commissioned.best.response_error_db:.3f} dB "
         f"after {len(commissioned.evaluations)} experimental configurations"
+    )
+    print(
+        "Pre-mortem: "
+        f"{resilience_plan.coverage * 100.0:.0f}% single-fault coverage, "
+        f"{len(resilience_plan.fallbacks)} reserved routes"
     )
 
     active_capacitors = original_configuration.active_capacitors(
@@ -62,7 +70,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
     failed_nf = board.design.capacitor_farads[failed_capacitor] * 1.0e9
     print()
     print(
-        f"Injected fault: capacitor branch C{failed_capacitor} "
+        f"Injected fault: capacitor branch C{failed_capacitor + 1} "
         f"({failed_nf:g} nF) opened"
     )
 
@@ -75,8 +83,10 @@ def run_demo(trace_path: Path | None = None) -> dict:
 
     recovered = None
     recovered_description = None
+    recovery_decision = None
     if health.fault_detected:
-        recovered = controller.recover(budget=24)
+        recovery_decision = controller.recover_resiliently(budget=24)
+        recovered = recovery_decision.result
         recovered_description = describe_configuration(
             board,
             recovered.best.configuration,
@@ -88,16 +98,27 @@ def run_demo(trace_path: Path | None = None) -> dict:
             f"measured fc≈{recovered_description['physical_cutoff_hz']:.1f} Hz"
         )
         print(
-            f"Recovered response error={recovered.best.response_error_db:.3f} dB"
+            f"Recovered response error={recovered.best.response_error_db:.3f} dB "
+            f"using {recovery_decision.mode}"
         )
 
     trace = seal_payload({
-        "schema_version": "0.4",
+        "schema_version": "0.5",
         "requested_cutoff_hz": requested_cutoff_hz,
         "commissioned": {
             **original,
             "response_error_db": commissioned.best.response_error_db,
             "measurements": len(commissioned.evaluations),
+        },
+        "resilience": {
+            "coverage_percent": resilience_plan.coverage * 100.0,
+            "qualified_route_count": len(resilience_plan.fallbacks),
+            "qualification_measurements": (
+                controller.qualification_measurements
+            ),
+            "worst_preflight_error_db": (
+                resilience_plan.worst_fallback_error_db
+            ),
         },
         "fault": {
             "type": "open_capacitor",
@@ -113,8 +134,14 @@ def run_demo(trace_path: Path | None = None) -> dict:
                 **recovered_description,
                 "response_error_db": recovered.best.response_error_db,
                 "measurements": len(recovered.evaluations),
+                "recovery_mode": recovery_decision.mode,
+                "search_measurements_avoided": (
+                    recovery_decision.search_measurements_avoided
+                ),
             }
-            if recovered is not None and recovered_description is not None
+            if recovered is not None
+            and recovered_description is not None
+            and recovery_decision is not None
             else None
         ),
         "total_board_measurements": board.measurement_count,
@@ -128,7 +155,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run the Darwin Board milestone 0.4 demonstration"
+        description="Run the Darwin Board milestone 0.5 demonstration"
     )
     parser.add_argument(
         "--trace",

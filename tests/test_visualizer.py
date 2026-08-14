@@ -16,7 +16,7 @@ class VisualizerSessionTest(unittest.TestCase):
             32,
         )
         self.assertTrue(session["stages"]["fault"]["detected"])
-        self.assertEqual(session["schema_version"], "0.4")
+        self.assertEqual(session["schema_version"], "0.5")
         self.assertTrue(verify_payload(session))
         self.assertEqual(session["meta"]["backend"], "digital_twin")
         self.assertEqual(session["stages"]["fault"]["health_sweeps"], 3)
@@ -29,8 +29,23 @@ class VisualizerSessionTest(unittest.TestCase):
             session["stages"]["recovered"]["response_error_db"],
             1.0,
         )
-        self.assertEqual(len(session["search"]["commissioned"]), 24)
-        self.assertEqual(len(session["search"]["recovered"]), 24)
+        self.assertEqual(len(session["search"]["commissioned"]), 30)
+        self.assertLess(len(session["search"]["recovered"]), 24)
+        self.assertEqual(session["resilience"]["coverage_percent"], 100.0)
+        self.assertGreater(
+            session["resilience"]["qualified_route_count"],
+            0,
+        )
+        self.assertEqual(
+            session["stages"]["recovered"]["recovery_mode"],
+            "prequalified reflex",
+        )
+        self.assertGreater(
+            session["stages"]["recovered"][
+                "search_measurements_avoided"
+            ],
+            0,
+        )
         self.assertRegex(
             session["stages"]["commissioned"]["configuration"]["genotype"],
             r"^R[1-6]:C[01]{6}$",

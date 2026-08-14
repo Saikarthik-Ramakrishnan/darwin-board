@@ -471,6 +471,10 @@
       background: var(--blue);
     }
 
+    .search-bar.reserve {
+      background: var(--green);
+    }
+
     .side {
       display: grid;
       align-content: start;
@@ -539,6 +543,38 @@
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.01em;
       text-align: right;
+    }
+
+    .reserve-list {
+      border-top: 1px solid var(--line);
+    }
+
+    .reserve-row {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .reserve-component,
+    .reserve-route,
+    .reserve-error {
+      font-family: var(--numeric);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .reserve-component,
+    .reserve-error {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .reserve-route {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .timeline {
@@ -714,15 +750,26 @@
       }
 
       .status-strip {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
       }
 
       .status-block {
-        padding: 14px 12px 14px 0;
+        padding: 12px 0;
       }
 
       .status-block + .status-block {
-        padding-left: 12px;
+        padding-left: 0;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .status-block:nth-child(3),
+      .status-block:nth-child(4),
+      .status-block:nth-child(5) {
+        padding-left: 0;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+        grid-column: auto;
       }
 
       .status-value {
@@ -767,7 +814,7 @@
         </div>
       </div>
       <div class="topbar-meta">
-        <div class="version">DIGITAL TWIN / M0.4</div>
+        <div class="version">DIGITAL TWIN / M0.5</div>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">
           <span class="theme-icon" aria-hidden="true"></span>
           <span id="theme-label" class="theme-label">Dark mode</span>
@@ -864,7 +911,7 @@
             <div class="section-head">
               <div>
                 <h2 id="search-title">Search observations</h2>
-                <p class="section-note">Response error for each tested configuration</p>
+                <p class="section-note">Search measurements and pre-mortem qualification</p>
               </div>
               <div id="best-observation" class="section-note">No measurements</div>
             </div>
@@ -925,6 +972,10 @@
                   <td id="memory-count">0 learned paths</td>
                 </tr>
                 <tr>
+                  <th scope="row">Survival reserve</th>
+                  <td id="resilience-reserve">--</td>
+                </tr>
+                <tr>
                   <th scope="row">Run proof</th>
                   <td id="proof-id">Not generated</td>
                 </tr>
@@ -933,6 +984,17 @@
             <p id="diagnostic-note" class="diagnostic-note">
               Health evidence appears after fault injection.
             </p>
+          </section>
+
+          <section aria-labelledby="reserve-title">
+            <div class="section-head">
+              <div>
+                <h2 id="reserve-title">Failure pre-mortem</h2>
+                <p class="section-note">Measured routes reserved before activation</p>
+              </div>
+              <div id="reserve-coverage" class="section-note">No plan</div>
+            </div>
+            <div id="reserve-list" class="reserve-list" aria-live="polite"></div>
           </section>
 
           <section aria-labelledby="sequence-title">
@@ -946,6 +1008,10 @@
               <li id="step-tune">
                 <span class="timeline-title">Tune</span>
                 <span id="detail-tune" class="timeline-detail">Pending</span>
+              </li>
+              <li id="step-plan">
+                <span class="timeline-title">Pre-mortem</span>
+                <span id="detail-plan" class="timeline-detail">Pending</span>
               </li>
               <li id="step-fault">
                 <span class="timeline-title">Fault injection</span>
@@ -999,6 +1065,7 @@
       genotype: document.getElementById("genotype"),
       signatureDelta: document.getElementById("signature-delta"),
       memoryCount: document.getElementById("memory-count"),
+      resilienceReserve: document.getElementById("resilience-reserve"),
       proofId: document.getElementById("proof-id"),
       diagnosticNote: document.getElementById("diagnostic-note"),
       schematicR: document.getElementById("schematic-r"),
@@ -1008,11 +1075,15 @@
       capLeft: document.getElementById("cap-left"),
       capRight: document.getElementById("cap-right"),
       stepTune: document.getElementById("step-tune"),
+      stepPlan: document.getElementById("step-plan"),
       stepFault: document.getElementById("step-fault"),
       stepRecover: document.getElementById("step-recover"),
       detailTune: document.getElementById("detail-tune"),
+      detailPlan: document.getElementById("detail-plan"),
       detailFault: document.getElementById("detail-fault"),
       detailRecover: document.getElementById("detail-recover"),
+      reserveCoverage: document.getElementById("reserve-coverage"),
+      reserveList: document.getElementById("reserve-list"),
       themeToggle: document.getElementById("theme-toggle"),
       themeLabel: document.getElementById("theme-label")
     };
@@ -1203,17 +1274,19 @@
       };
       elements.measurementCount.textContent = measurementCounts[state.stage];
       if (state.stage === "commissioned") {
-        elements.evidenceValue.textContent = state.session.meta.warm_started
-          ? "Memory guided"
-          : "Cold search";
+        elements.evidenceValue.textContent =
+          `${state.session.resilience.coverage_percent.toFixed(0)}% preflight`;
       } else if (state.stage === "fault") {
         elements.evidenceValue.textContent =
           `${stage.signature_ratio.toFixed(1)}× threshold`;
       } else {
         elements.evidenceValue.textContent =
-          `${stage.recovery_gain_db.toFixed(2)} dB restored`;
+          stage.recovery_mode === "prequalified reflex"
+            ? `${stage.reflex_speedup.toFixed(1)}× faster`
+            : `${stage.recovery_gain_db.toFixed(2)} dB restored`;
       }
       renderConfiguration(stage);
+      renderReserve();
       renderTimeline();
       const search = state.stage === "recovered"
         ? state.session.search.recovered
@@ -1231,6 +1304,7 @@
         elements.genotype.textContent = "--";
         elements.signatureDelta.textContent = "--";
         elements.memoryCount.textContent = "0 learned paths";
+        elements.resilienceReserve.textContent = "--";
         elements.proofId.textContent = "Not generated";
         elements.proofId.removeAttribute("title");
         elements.schematicR.textContent = "R --";
@@ -1243,6 +1317,7 @@
         elements.resistorPath.classList.remove("drift");
         elements.diagnosticNote.textContent =
           "Health evidence appears after fault injection.";
+        renderReserve();
         return;
       }
 
@@ -1255,6 +1330,9 @@
       elements.memoryCount.textContent =
         `${state.session.meta.memory_records_after} learned ` +
         `${state.session.meta.memory_records_after === 1 ? "path" : "paths"}`;
+      elements.resilienceReserve.textContent =
+        `${state.session.resilience.qualified_route_count} qualified ` +
+        `${state.session.resilience.qualified_route_count === 1 ? "route" : "routes"}`;
       elements.proofId.textContent = state.session.evidence.run_id;
       elements.proofId.title =
         `${state.session.evidence.algorithm} ` +
@@ -1270,16 +1348,18 @@
         elements.signatureDelta.textContent =
           `${formatError(stage.recovery_gain_db)} restored`;
         elements.diagnosticNote.textContent =
-          `Recovery changed ${stage.mutation_distance} switching ` +
+          `${stage.recovery_mode === "prequalified reflex" ? "Reserved reflex" : "Search"} ` +
+          `changed ${stage.mutation_distance} switching ` +
           `${stage.mutation_distance === 1 ? "gene" : "genes"} and ` +
           `${stage.fault_bypassed ? "bypassed" : "compensated for"} ` +
-          `${state.session.stages.fault.component}.`;
+          `${state.session.stages.fault.component}; ` +
+          `${stage.search_measurements_avoided} search measurements avoided.`;
       } else {
         elements.signatureDelta.textContent = "Baseline stored";
-        elements.diagnosticNote.textContent = state.session.meta.warm_started
-          ? "Search opened with a configuration remembered from an earlier run."
-          : `Cold search completed; monitoring uses ` +
-            `${state.session.meta.health_sweeps} median-aggregated sweeps.`;
+        elements.diagnosticNote.textContent =
+          `Pre-mortem measured ${state.session.resilience.qualification_measurements} ` +
+          `escape routes before activation; monitoring uses ` +
+          `${state.session.meta.health_sweeps} median-aggregated sweeps.`;
       }
       elements.schematicR.textContent = `R ${formatResistance(configuration.nominal_resistance_ohms)}`;
       elements.schematicC.textContent = `C ${formatCapacitance(configuration.nominal_capacitance_nf)}`;
@@ -1302,18 +1382,59 @@
         : "";
     }
 
+    function renderReserve() {
+      elements.reserveList.replaceChildren();
+      if (!state.session) {
+        elements.reserveCoverage.textContent = "No plan";
+        return;
+      }
+      const resilience = state.session.resilience;
+      elements.reserveCoverage.textContent =
+        `${resilience.coverage_percent.toFixed(0)}% single-fault coverage`;
+      const bestByComponent = new Map();
+      resilience.contingencies.forEach(item => {
+        const current = bestByComponent.get(item.failed_component);
+        if (!current || item.preflight_error_db < current.preflight_error_db) {
+          bestByComponent.set(item.failed_component, item);
+        }
+      });
+      bestByComponent.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "reserve-row";
+        const component = document.createElement("span");
+        component.className = "reserve-component";
+        component.textContent = item.failed_component;
+        const route = document.createElement("span");
+        route.className = "reserve-route";
+        route.textContent = `→ ${item.fallback.genotype}`;
+        const error = document.createElement("span");
+        error.className = "reserve-error";
+        error.textContent = formatError(item.preflight_error_db);
+        row.append(component, route, error);
+        elements.reserveList.appendChild(row);
+      });
+    }
+
     function renderTimeline() {
       const order = ["commissioned", "fault", "recovered"];
       const currentIndex = order.indexOf(state.stage);
-      const nodes = [elements.stepTune, elements.stepFault, elements.stepRecover];
+      const nodes = [
+        elements.stepTune,
+        elements.stepPlan,
+        elements.stepFault,
+        elements.stepRecover
+      ];
+      const thresholds = [0, 0, 1, 2];
+      const currentNode = [1, 2, 3][currentIndex];
       nodes.forEach((node, index) => {
         node.className = "";
-        if (currentIndex >= index) node.classList.add("complete");
-        if (currentIndex === index) node.classList.add("current");
+        if (currentIndex >= thresholds[index]) node.classList.add("complete");
+        if (currentNode === index) node.classList.add("current");
       });
 
       if (!state.session) {
         elements.detailTune.textContent = "Pending";
+        elements.detailPlan.textContent = "Pending";
         elements.detailFault.textContent = "Pending";
         elements.detailRecover.textContent = "Pending";
         return;
@@ -1326,18 +1447,22 @@
         ? "memory start"
         : "cold start";
       elements.detailTune.textContent =
-        `${searchOrigin} / ${tuned.measurements} tests / ` +
+        `${searchOrigin} / ${state.session.meta.budget} search tests / ` +
         `${formatError(tuned.response_error_db)}`;
+      elements.detailPlan.textContent =
+        `${state.session.resilience.qualification_measurements} tests / ` +
+        `${state.session.resilience.qualified_route_count} routes / ` +
+        `${state.session.resilience.coverage_percent.toFixed(0)}% coverage`;
       elements.detailFault.textContent = currentIndex >= 1
         ? `${fault.component} ${fault.change_percent > 0 ? "+" : ""}` +
           `${fault.change_percent.toFixed(0)}% / ` +
           `${fault.signature_ratio.toFixed(1)}× threshold`
         : "Pending";
       elements.detailRecover.textContent = currentIndex >= 2
-        ? `${recovered.measurements} tests / ` +
+        ? `${recovered.attempted_fallbacks} reflex probes / ` +
           `${recovered.mutation_distance} switch mutations / ` +
-          `${formatError(recovered.response_error_db)} / ` +
-          `${formatError(recovered.recovery_gain_db)} restored`
+          `${recovered.search_measurements_avoided} search tests avoided / ` +
+          `${formatError(recovered.response_error_db)}`
         : "Pending";
     }
 
@@ -1355,6 +1480,9 @@
         const bar = document.createElement("span");
         const normalized = item.response_error_db / maxError;
         bar.className = "search-bar";
+        if (item.selection_method === "contingency qualification") {
+          bar.classList.add("reserve");
+        }
         if (item.response_error_db === bestError) bar.classList.add("best");
         bar.style.height = `${Math.max(4, normalized * 64)}px`;
         bar.setAttribute(
@@ -1376,8 +1504,12 @@
       const memoryLabel = state.session.meta.warm_started
         ? "Memory-guided / "
         : "";
+      const observationLabel = state.stage === "recovered"
+        ? `${observations.length} reflex`
+        : `${state.session.resilience.qualification_measurements} preflight`;
       elements.bestObservation.textContent =
-        `${memoryLabel}best ${bestError.toFixed(3)} dB RMS`;
+        `${memoryLabel}${observationLabel} / ` +
+        `best ${bestError.toFixed(3)} dB RMS`;
     }
 
     function drawChart() {
