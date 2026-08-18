@@ -30,8 +30,19 @@ capacitor combinations, giving 378 possible paths.
 ## Learning a configuration
 
 Experience memory first offers configurations that performed well near the
-requested cutoff. A nominal RC estimate and space-filling probes complete the
-initial sample set. Later experiments minimize a lower confidence bound:
+requested cutoff. The ideal RC equations score every route before measurement,
+and the strongest nominal route plus reproducible exploratory probes complete
+the initial sample set.
+
+The tuner then learns the difference between the nominal score and the measured
+score. This residual is smaller and smoother than the complete response, which
+makes it harder for measurement noise to distort the model. Three regularized
+Gaussian processes use different kernel scales. Their average supplies the
+prediction, while their disagreement increases the reported uncertainty.
+Capacitor-mask features also distinguish routes with similar total capacitance
+but different physical components.
+
+Later experiments minimize a lower confidence bound:
 
 ```text
 predicted score - exploration weight × predicted uncertainty
