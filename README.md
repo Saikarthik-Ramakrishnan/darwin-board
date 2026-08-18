@@ -2,37 +2,36 @@
 
 ![Darwin Board system](docs/assets/darwin-board-system.svg)
 
-Darwin Board is an experiment in adaptive analog hardware. Give it a target
-cutoff frequency and it searches the available component paths, remembers what
-worked, tests escape routes before activation, watches for response changes,
-and reacts through a pre-qualified backup path.
+Darwin Board is a self-tuning RC filter with reconfigurable component paths.
+Set a cutoff frequency and the controller finds a matching circuit, checks a
+backup for each active component, and monitors the response. If a component
+fails, it tries the prepared backups before starting a fresh search.
 
-The current circuit is a reconfigurable RC low-pass filter with 378 possible
-resistor and capacitor combinations.
+The current digital twin covers 378 resistor and capacitor combinations.
 
 ## How it works
 
-1. Use Bayesian optimization to measure promising configurations.
-2. Run a pre-mortem and qualify escape routes for every active component.
-3. Activate a configuration with complete single-fault coverage.
-4. Detect persistent changes using three health sweeps.
-5. Probe the reserved routes and restore the target response.
+1. A Bayesian optimizer chooses promising configurations to measure.
+2. The best configuration becomes the primary route.
+3. Before activation, the controller measures backups that avoid each active
+   component.
+4. Three health sweeps confirm a persistent response change.
+5. The controller probes its small backup reserve. It resumes the full search
+   only if those routes miss the target.
 
-Experience memory gives later searches a useful starting point. Every
-measurement and decision is kept in the exported experiment trace.
+Successful configurations seed later runs. The exported trace records every
+measurement, choice, fault, and recovery.
 
 ## Current status
 
-Milestone 0.5 includes:
+Version 0.5 is ready for breadboard validation. It includes:
 
-- a tested digital twin
-- an interactive tuning and recovery lab
+- a tested digital twin and interactive lab
 - persistent configuration memory
-- a measured single-fault contingency atlas
-- pre-qualified reflex recovery before a new search
-- SHA-256 sealed experiment exports
-- a USB serial adapter
-- compiled firmware for a classic ESP32
+- measured backups for single-component faults
+- fast recovery through pre-qualified routes
+- SHA-256 sealed experiment traces
+- a USB serial adapter and ESP32 firmware
 
 The simulation benchmark covers 90 runs across three targets, ten component
 tolerance profiles, and three fault types.
@@ -47,9 +46,9 @@ tolerance profiles, and three fault types.
 | Commissioned error, median / p95 | 0.092 / 0.263 dB |
 | Recovered error, median / p95 | 0.048 / 0.302 dB |
 
-These are simulation results. Physical validation is the next milestone. The
-complete data is in [`benchmark-results.json`](benchmark-results.json).
-Reference run: `DB-09CA6BA28199`.
+These results come from simulation. Physical validation is the next milestone.
+The full data is in [`benchmark-results.json`](benchmark-results.json), under
+reference run `DB-09CA6BA28199`.
 
 ```bash
 darwin-board-verify benchmark-results.json
@@ -62,8 +61,8 @@ python3 -m pip install -e .
 PYTHONPATH=src python3 -m darwin_board.visualizer_server
 ```
 
-Open [http://127.0.0.1:8765](http://127.0.0.1:8765) and select **Run
-autonomous cycle**. Run it again to see the search use earlier experience.
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765) and select **Run autonomous
+cycle**. A second run shows how saved experience guides the search.
 
 Tests and benchmark:
 
@@ -76,13 +75,11 @@ PYTHONPATH=src python3 -m darwin_board.benchmark \
 
 ## ESP32 build
 
-The first prototype targets an original ESP32-WROOM-32 or ESP32 DevKitC.
-GPIO25 applies a DAC voltage step and GPIO34 samples the filter response. The
-firmware repeats that step at different delays, reconstructs the transient, and
-estimates the RC time constant and cutoff frequency.
-
-This gives the breadboard a useful self-measurement mode before oscilloscope
-and waveform-generator access.
+The first prototype targets an ESP32-WROOM-32 or ESP32 DevKitC. GPIO25 applies
+a voltage step and GPIO34 samples the filter response. Repeating the step at
+different delays reconstructs the transient, which lets the ESP32 estimate the
+RC time constant and cutoff frequency without an oscilloscope or external
+waveform generator.
 
 ```bash
 cd firmware/esp32
@@ -96,16 +93,12 @@ The build guide, wiring, and parts list are in
 
 ## Documentation
 
-- [`docs/architecture.md`](docs/architecture.md): control loop and software
-  boundaries
-- [`docs/esp32-build.md`](docs/esp32-build.md): breadboard plan and lab
-  validation
-- [`docs/serial-protocol.md`](docs/serial-protocol.md): ESP32 command protocol
-- [`docs/milestone-0.5.md`](docs/milestone-0.5.md): pre-mortem algorithm,
-  evidence, and physical proof contract
-- [`docs/linkedin-demo.md`](docs/linkedin-demo.md): short demonstration script
-- [`docs/hackathon-submission.md`](docs/hackathon-submission.md): Devpost copy,
-  demo plan, and judging checklist
+- [`docs/architecture.md`](docs/architecture.md): system design
+- [`docs/esp32-build.md`](docs/esp32-build.md): parts, wiring, and validation
+- [`docs/serial-protocol.md`](docs/serial-protocol.md): ESP32 commands
+- [`docs/milestone-0.5.md`](docs/milestone-0.5.md): recovery method and proof plan
+- [`docs/linkedin-demo.md`](docs/linkedin-demo.md): demonstration script
+- [`docs/hackathon-submission.md`](docs/hackathon-submission.md): submission notes
 
 Keep the prototype at 3.3 V and isolate it from mains voltage and high-power
 loads.

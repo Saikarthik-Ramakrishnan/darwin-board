@@ -1,18 +1,16 @@
 # ESP32 firmware
 
-This firmware targets a classic ESP32 development board with the original
-ESP32 chip. It uses GPIO25 as the internal DAC output and GPIO34 as an ADC1
-measurement input.
+Firmware for an original ESP32 development board. GPIO25 supplies the internal
+DAC output and GPIO34 reads the filter through ADC1.
 
-The first breadboard does not require an AD9833. It repeatedly applies the same
-voltage step and samples one delayed point from each response. Combining those
-points reconstructs the transient at an effective resolution finer than a
-single ADC conversion. A logarithmic fit estimates the RC time constant and
-cutoff frequency.
+The ESP32 repeats a voltage step and samples the response at a different delay
+each time. Those samples reconstruct the RC transient. A logarithmic fit then
+estimates the time constant and cutoff frequency. The first breadboard needs no
+AD9833 or oscilloscope.
 
 ## Build
 
-Install PlatformIO, connect the ESP32, then run:
+Install PlatformIO and connect the board:
 
 ```bash
 pio run
@@ -20,7 +18,7 @@ pio run --target upload
 pio device monitor
 ```
 
-## Smoke test
+## Fixed-filter test
 
 Wire a fixed RC low-pass filter:
 
@@ -41,5 +39,5 @@ SWEEP 100 10000 32
 STATUS?
 ```
 
-The switching pins are already reserved in `src/main.cpp`. They can remain
-unconnected during the fixed-filter measurement milestone.
+The switching pins are reserved in `src/main.cpp`. Leave them unconnected for
+this fixed-filter test.
