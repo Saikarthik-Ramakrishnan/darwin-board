@@ -1,5 +1,9 @@
 # Darwin Board
 
+<p align="center">
+  <img src="docs/assets/darwin-board-logo.png" alt="Darwin Board logo" width="360">
+</p>
+
 ![Darwin Board system](docs/assets/darwin-board-system.svg)
 
 Darwin Board is a self-tuning RC filter with reconfigurable component paths.
