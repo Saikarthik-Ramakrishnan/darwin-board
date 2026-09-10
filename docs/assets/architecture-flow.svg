@@ -3,20 +3,18 @@
   <desc id="description">The controller searches circuit genotypes, configures and measures a path, activates it, monitors its health, and loads a backup after a fault.</desc>
 
   <style>
-    .box { fill: #f8fafc; stroke: #334155; stroke-width: 3; }
-    .box-accent { fill: #ecfdf5; stroke: #047857; stroke-width: 3; }
-    .label { fill: #0f172a; font: 600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-anchor: middle; }
-    .note { fill: #475569; font: 600 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-anchor: middle; }
-    .line { fill: none; stroke: #475569; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
-    .arrow { fill: #475569; }
+    .box, .box-accent { fill: #ececff; stroke: #9370db; stroke-width: 3; }
+    .label { fill: #131300; font: 600 22px "Trebuchet MS", Verdana, Arial, sans-serif; text-anchor: middle; }
+    .note { fill: #333333; font: 600 18px "Trebuchet MS", Verdana, Arial, sans-serif; text-anchor: middle; }
+    .line { fill: none; stroke: #333333; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+    .arrow { fill: #333333; }
 
     @media (prefers-color-scheme: dark) {
-      .box { fill: #111827; stroke: #94a3b8; }
-      .box-accent { fill: #052e2b; stroke: #34d399; }
-      .label { fill: #f8fafc; }
-      .note { fill: #cbd5e1; }
-      .line { stroke: #cbd5e1; }
-      .arrow { fill: #cbd5e1; }
+      .box, .box-accent { fill: #1f2020; stroke: #81b1db; }
+      .label { fill: #f3f4f6; }
+      .note { fill: #d1d5db; }
+      .line { stroke: #d1d5db; }
+      .arrow { fill: #d1d5db; }
     }
   </style>
 
