@@ -12,7 +12,7 @@ active circuit degrades.
 ## Architecture
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[Requested cutoff frequency] --> B[Generate circuit genotypes]
     B --> C[Evolutionary search and Bayesian ranking]
     C --> D[ESP32 configures the component path]
