@@ -12,21 +12,16 @@ active circuit degrades.
 ## Architecture
 
 ```mermaid
+%%{init: {"themeVariables": {"fontSize": "20px"}}}%%
 flowchart LR
-    A[Requested cutoff frequency] --> B[Generate circuit genotypes]
-    B --> C[Evolutionary search and Bayesian ranking]
-    C --> D[ESP32 configures the component path]
-    D --> E[Measure the circuit response]
-    E --> F{Within tolerance?}
-    F -->|No| C
-    F -->|Yes| G[Activate the best path and qualify backups]
-    G --> H[Monitor the response]
-    H --> I{Degradation detected?}
-    I -->|No| H
-    I -->|Yes| J[Switch to a qualified backup]
-    J --> K{Recovery successful?}
-    K -->|Yes| H
-    K -->|No| C
+    A[Set target] --> B[Rank genotypes]
+    B --> C[Configure ESP32]
+    C --> D[Measure response]
+    D --> E[Activate path]
+    E --> F[Monitor health]
+    D -->|Outside tolerance| B
+    F -->|Fault detected| G[Load backup]
+    G --> C
 ```
 
 ## How it works
