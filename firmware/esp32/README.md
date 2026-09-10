@@ -8,6 +8,10 @@ each time. Those samples reconstruct the RC transient. A logarithmic fit then
 estimates the time constant and cutoff frequency. The first breadboard needs no
 AD9833 or oscilloscope.
 
+The reconfigurable build addresses eight resistor paths and an eight-bit
+capacitor mask. A three-bit analog multiplexer selects the resistor while a
+shift register drives the capacitor-switch controls.
+
 ## Build
 
 Install PlatformIO and connect the board:

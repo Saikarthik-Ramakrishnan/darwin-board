@@ -107,13 +107,14 @@ A good first transient should report:
 
 After the fixed filter is stable:
 
-1. Add a three-bit analog multiplexer for the six resistor choices.
-2. Add six individually controlled capacitor branches.
-3. Connect the reserved switching GPIOs from the firmware.
-4. Measure the effective resistance of every closed switch path.
-5. Add that resistance to the digital twin.
-6. Pre-qualify two escape routes for every component in the active path.
-7. Open one capacitor branch and compare reflex latency with a fresh search.
+1. Add a 74HC4051-class analog multiplexer for eight resistor choices.
+2. Add eight capacitor branches through two quad analog-switch ICs.
+3. Drive their control inputs from an eight-output 74HC595-class shift register.
+4. Connect the reserved switching GPIOs from the firmware.
+5. Measure the effective resistance of every closed switch path.
+6. Add that resistance to the digital twin.
+7. Pre-qualify two escape routes for every component in the active path.
+8. Open one capacitor branch and compare reflex latency with a fresh search.
 
 The current firmware reserves:
 
@@ -121,8 +122,10 @@ The current firmware reserves:
 | --- | --- |
 | DAC step output | 25 |
 | ADC response input | 34 |
-| Resistor select bits | 21, 22, 23 |
-| Capacitor branch controls | 13, 14, 16, 17, 18, 19 |
+| Resistor multiplexer address | 21, 22, 23 |
+| Capacitor shift-register data | 13 |
+| Capacitor shift-register clock | 14 |
+| Capacitor shift-register latch | 16 |
 
 ## Lab validation in three weeks
 

@@ -36,10 +36,7 @@ def _configuration_payload(
     return {
         "resistor_index": configuration.resistor_index,
         "capacitor_mask": configuration.capacitor_mask,
-        "genotype": (
-            f"R{configuration.resistor_index + 1}:"
-            f"C{configuration.capacitor_mask:06b}"
-        ),
+        "genotype": board.design.genotype(configuration),
         "active_capacitors": list(
             configuration.active_capacitors(len(board.design.capacitor_farads))
         ),
@@ -56,6 +53,7 @@ def _search_payload(
     return [
         {
             "measurement": index,
+            "genotype": board.design.genotype(evaluation.configuration),
             "score": evaluation.score,
             "response_error_db": evaluation.response_error_db,
             "nominal_cutoff_hz": board.design.nominal_cutoff_hz(
@@ -67,6 +65,69 @@ def _search_payload(
         }
         for index, evaluation in enumerate(result.evaluations, start=1)
     ]
+
+
+def _evolution_payload(
+    board: SimulatedDarwinBoard,
+    result: TuningResult,
+) -> list[dict[str, Any]]:
+    evaluations = {
+        evaluation.configuration: evaluation
+        for evaluation in sorted(
+            result.evaluations,
+            key=lambda item: item.score,
+            reverse=True,
+        )
+    }
+    payload: list[dict[str, Any]] = []
+    previous_error: float | None = None
+    for generation in result.generations:
+        best_evaluation = evaluations[generation.best_configuration]
+        survivor_errors = [
+            evaluations[configuration].response_error_db
+            for configuration in generation.survivors
+        ]
+        response_improvement = (
+            0.0
+            if previous_error is None
+            else previous_error - best_evaluation.response_error_db
+        )
+        payload.append({
+            "generation": generation.index,
+            "parents": [
+                board.design.genotype(configuration)
+                for configuration in generation.parents
+            ],
+            "offspring": [
+                board.design.genotype(configuration)
+                for configuration in generation.offspring
+            ],
+            "survivors": [
+                board.design.genotype(configuration)
+                for configuration in generation.survivors
+            ],
+            "best_genotype": board.design.genotype(
+                generation.best_configuration
+            ),
+            "best_configuration": _configuration_payload(
+                board,
+                generation.best_configuration,
+            ),
+            "best_score": generation.best_score,
+            "best_response_error_db": best_evaluation.response_error_db,
+            "response_improvement_db": response_improvement,
+            "survivor_error_range_db": [
+                min(survivor_errors),
+                max(survivor_errors),
+            ],
+            "improvement": generation.improvement,
+            "diversity": generation.diversity,
+            "mutation_events": generation.mutation_events,
+            "crossover_events": generation.crossover_events,
+            "immigrant_count": generation.immigrant_count,
+        })
+        previous_error = best_evaluation.response_error_db
+    return payload
 
 
 def _resilience_payload(
@@ -263,10 +324,10 @@ def build_session(
     )
 
     session = {
-        "schema_version": "0.5",
+        "schema_version": "0.6",
         "meta": {
             "backend": "digital_twin",
-            "engine_version": "0.5.0",
+            "engine_version": "0.6.0",
             "cutoff_hz": cutoff_hz,
             "budget": budget,
             "seed": seed,
@@ -288,6 +349,18 @@ def build_session(
             ],
         },
         "resilience": resilience,
+        "evolution": {
+            "strategy": "physics-informed Bayesian evolution",
+            "generation_count": len(commissioned.generations),
+            "population_size": max(
+                (
+                    len(generation.survivors)
+                    for generation in commissioned.generations
+                ),
+                default=0,
+            ),
+            "generations": _evolution_payload(board, commissioned),
+        },
         "stages": {
             "commissioned": {
                 "configuration": commissioned_details,
@@ -341,7 +414,7 @@ def build_session(
 
 
 class VisualizerHandler(BaseHTTPRequestHandler):
-    server_version = "DarwinBoard/0.5"
+    server_version = "DarwinBoard/0.6"
     experience_memory = ExperienceMemory()
 
     def do_GET(self) -> None:

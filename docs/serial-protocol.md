@@ -7,12 +7,13 @@ and response ends with a newline.
 
 ```text
 > ID?
-< ID DARWIN_ESP32_1 FW=0.3.0
+< ID DARWIN_ESP32_1 FW=0.6.0
 ```
 
 ## Configure the switch fabric
 
-Resistor indices are zero-based. The capacitor mask uses the lowest six bits.
+Resistor indices are zero-based from 0 to 7. The capacitor mask uses all eight
+bits and must enable at least one branch.
 
 ```text
 > SET R=2 C=0x15

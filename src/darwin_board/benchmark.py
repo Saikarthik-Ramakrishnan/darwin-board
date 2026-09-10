@@ -111,7 +111,7 @@ def run_benchmark(
     )
 
     report = {
-        "schema_version": "0.5",
+        "schema_version": "0.6",
         "parameters": {
             "targets_hz": list(targets_hz),
             "seeds": list(seeds),

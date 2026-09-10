@@ -157,6 +157,34 @@
       background: currentColor;
     }
 
+    .view-tabs {
+      display: flex;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .view-tab {
+      height: 44px;
+      padding: 0;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .view-tab[aria-selected="true"] {
+      border-bottom-color: var(--ink);
+      color: var(--ink);
+    }
+
+    .view-panel[hidden] {
+      display: none;
+    }
+
     .controls {
       display: grid;
       grid-template-columns: minmax(220px, 1fr) 155px 185px auto;
@@ -475,6 +503,364 @@
       background: var(--green);
     }
 
+    .evolution-lineage {
+      border-top: 1px solid var(--line);
+    }
+
+    .evolution-row {
+      display: grid;
+      grid-template-columns: 62px minmax(155px, 1fr) minmax(180px, 1.3fr) auto;
+      gap: 12px;
+      align-items: center;
+      width: 100%;
+      height: auto;
+      padding: 11px 8px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      text-align: left;
+    }
+
+    .evolution-row:hover,
+    .evolution-row[aria-pressed="true"] {
+      background: var(--surface-subtle);
+    }
+
+    .evolution-row[aria-pressed="true"] {
+      box-shadow: inset 2px 0 0 var(--blue);
+    }
+
+    .evolution-generation,
+    .evolution-genotype,
+    .evolution-metrics {
+      font-family: var(--numeric);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .evolution-generation,
+    .evolution-metrics {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .evolution-generation strong {
+      display: block;
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .evolution-route {
+      min-width: 0;
+    }
+
+    .evolution-genotype {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .evolution-operations {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .evolution-metrics {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .diversity-track {
+      display: block;
+      width: 72px;
+      height: 3px;
+      margin: 5px 0 0 auto;
+      background: var(--line);
+    }
+
+    .diversity-value {
+      display: block;
+      height: 100%;
+      background: var(--blue);
+    }
+
+    .evolution-detail {
+      display: grid;
+      grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.3fr);
+      gap: 24px;
+      padding: 18px 0 4px;
+    }
+
+    .evolution-detail[hidden] {
+      display: none;
+    }
+
+    .evolution-detail-title {
+      margin-bottom: 6px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .evolution-detail-copy {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .evolution-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .evolution-fact-label,
+    .sequence-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .evolution-fact-value {
+      font-family: var(--numeric);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lineage-groups {
+      display: grid;
+      gap: 12px;
+    }
+
+    .lineage-group {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .lineage-group-label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .lineage-codes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      min-width: 0;
+    }
+
+    .lineage-codes code {
+      color: var(--ink);
+      font-family: var(--numeric);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sequence-panel {
+      padding-top: 26px;
+    }
+
+    .sequence-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .sequence-summary {
+      color: var(--muted);
+      font-family: var(--numeric);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .sequence-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+      border-top: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+    }
+
+    .sequence-step {
+      height: auto;
+      min-height: 58px;
+      padding: 9px 10px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--surface);
+      text-align: left;
+    }
+
+    .sequence-step[aria-pressed="true"] {
+      background: var(--surface-subtle);
+      box-shadow: inset 0 2px 0 var(--blue);
+    }
+
+    .sequence-step-index {
+      display: block;
+      color: var(--muted);
+      font-family: var(--numeric);
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sequence-step-name {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .sequence-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.65fr);
+      gap: 32px;
+      padding-top: 28px;
+    }
+
+    .sequence-diagram-wrap {
+      min-width: 0;
+    }
+
+    .sequence-diagram {
+      display: block;
+      width: 100%;
+      height: 280px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .sequence-diagram text {
+      fill: var(--muted);
+      font-family: var(--numeric);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sequence-diagram .sequence-wire,
+    .sequence-diagram .sequence-component {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 2;
+    }
+
+    .sequence-diagram .sequence-fault {
+      stroke: var(--red);
+    }
+
+    .sequence-diagram .sequence-change {
+      stroke: var(--green);
+      stroke-width: 3;
+    }
+
+    .sequence-diagram .sequence-node {
+      fill: var(--ink);
+    }
+
+    .sequence-diagram .sequence-state-label {
+      fill: var(--ink);
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .sequence-gene-grid {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      margin-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .sequence-gene {
+      min-width: 0;
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .sequence-gene + .sequence-gene {
+      border-left: 1px solid var(--line);
+    }
+
+    .sequence-gene.active {
+      color: var(--ink);
+      background: var(--surface);
+    }
+
+    .sequence-gene.changed {
+      box-shadow: inset 0 2px 0 var(--green);
+    }
+
+    .sequence-gene.fault {
+      color: var(--red);
+      box-shadow: inset 0 2px 0 var(--red);
+    }
+
+    .sequence-gene-name,
+    .sequence-gene-value {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sequence-gene-name {
+      font-family: var(--numeric);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sequence-gene-value {
+      margin-top: 2px;
+      font-size: 9px;
+    }
+
+    .sequence-copy {
+      margin: 8px 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .sequence-values {
+      margin: 0;
+    }
+
+    .sequence-values div {
+      display: grid;
+      grid-template-columns: minmax(100px, 0.8fr) minmax(0, 1.2fr);
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sequence-values dt {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .sequence-values dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-family: var(--numeric);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
     .side {
       display: grid;
       align-content: start;
@@ -577,75 +963,6 @@
       white-space: nowrap;
     }
 
-    .timeline {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .timeline li {
-      position: relative;
-      padding: 0 0 18px 24px;
-      color: var(--muted);
-    }
-
-    .timeline li:last-child {
-      padding-bottom: 0;
-    }
-
-    .timeline li::before {
-      content: "";
-      position: absolute;
-      top: 5px;
-      left: 2px;
-      width: 7px;
-      height: 7px;
-      border: 1px solid var(--line-strong);
-      border-radius: 50%;
-      background: var(--page);
-    }
-
-    .timeline li::after {
-      content: "";
-      position: absolute;
-      top: 14px;
-      bottom: 2px;
-      left: 5px;
-      border-left: 1px solid var(--line);
-    }
-
-    .timeline li:last-child::after {
-      display: none;
-    }
-
-    .timeline li.complete {
-      color: var(--ink);
-    }
-
-    .timeline li.complete::before {
-      border-color: var(--ink);
-      background: var(--ink);
-    }
-
-    .timeline li.current::before {
-      border-color: var(--blue);
-      background: var(--blue);
-    }
-
-    .timeline-title {
-      display: block;
-      margin-bottom: 2px;
-      font-weight: 600;
-    }
-
-    .timeline-detail {
-      display: block;
-      font-family: var(--numeric);
-      font-size: 11px;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.01em;
-    }
-
     .diagnostic-note {
       margin-top: 10px;
       color: var(--muted);
@@ -709,6 +1026,27 @@
       }
 
       .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .evolution-row {
+        grid-template-columns: 54px minmax(0, 1fr) auto;
+      }
+
+      .evolution-operations {
+        grid-column: 2 / 3;
+      }
+
+      .evolution-metrics {
+        grid-column: 3;
+        grid-row: 1 / span 2;
+      }
+
+      .evolution-detail {
+        grid-template-columns: 1fr;
+      }
+
+      .sequence-layout {
         grid-template-columns: 1fr;
       }
     }
@@ -789,6 +1127,54 @@
         min-height: 320px;
         height: 320px;
       }
+
+      .evolution-row {
+        grid-template-columns: 44px minmax(0, 1fr);
+      }
+
+      .evolution-operations,
+      .evolution-metrics {
+        grid-column: 2;
+        grid-row: auto;
+        text-align: left;
+      }
+
+      .diversity-track {
+        margin-left: 0;
+      }
+
+      .evolution-detail {
+        grid-template-columns: 1fr;
+      }
+
+      .evolution-facts {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .lineage-group {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+
+      .sequence-head {
+        display: grid;
+      }
+
+      .sequence-summary {
+        text-align: left;
+      }
+
+      .sequence-diagram {
+        height: 230px;
+      }
+
+      .sequence-gene-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .sequence-gene:nth-child(5) {
+        border-left: 0;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -810,11 +1196,11 @@
         <div class="mark" aria-hidden="true">DB</div>
         <div>
           <div class="brand-name">Darwin Board</div>
-        <div class="brand-subtitle">Self-tuning analog systems lab</div>
+        <div class="brand-subtitle">Evolutionary analog systems lab</div>
         </div>
       </div>
       <div class="topbar-meta">
-        <div class="version">DIGITAL TWIN / M0.5</div>
+        <div class="version">DIGITAL TWIN / M0.6</div>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">
           <span class="theme-icon" aria-hidden="true"></span>
           <span id="theme-label" class="theme-label">Dark mode</span>
@@ -822,7 +1208,27 @@
       </div>
     </header>
 
+    <nav class="view-tabs" role="tablist" aria-label="Visualizer views">
+      <button
+        id="lab-tab"
+        class="view-tab"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls="lab-panel"
+      >Lab</button>
+      <button
+        id="sequence-tab"
+        class="view-tab"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="sequence-panel"
+      >Run sequence</button>
+    </nav>
+
     <main>
+      <div id="lab-panel" class="view-panel" role="tabpanel" aria-labelledby="lab-tab">
       <section class="controls" aria-label="Simulation controls">
         <label class="field" for="cutoff">
           <span class="field-head">
@@ -917,6 +1323,38 @@
             </div>
             <div id="search-track" class="search-track" aria-label="Search observation errors"></div>
           </section>
+
+          <section class="search" aria-labelledby="evolution-title">
+            <div class="section-head">
+              <div>
+                <h2 id="evolution-title">Evolution lineage</h2>
+                <p class="section-note">What changed, what was measured, and what was kept each round</p>
+              </div>
+              <div id="evolution-summary" class="section-note">No generations</div>
+            </div>
+            <div id="evolution-lineage" class="evolution-lineage" aria-label="Evolution generations"></div>
+            <div id="evolution-detail" class="evolution-detail" hidden>
+              <div>
+                <div id="evolution-detail-title" class="evolution-detail-title"></div>
+                <p id="evolution-detail-copy" class="evolution-detail-copy"></p>
+                <div class="evolution-facts">
+                  <div>
+                    <span class="evolution-fact-label">Best circuit</span>
+                    <span id="evolution-detail-genotype" class="evolution-fact-value">--</span>
+                  </div>
+                  <div>
+                    <span class="evolution-fact-label">Measured error</span>
+                    <span id="evolution-detail-error" class="evolution-fact-value">--</span>
+                  </div>
+                  <div>
+                    <span class="evolution-fact-label">Population spread</span>
+                    <span id="evolution-detail-diversity" class="evolution-fact-value">--</span>
+                  </div>
+                </div>
+              </div>
+              <div id="evolution-groups" class="lineage-groups"></div>
+            </div>
+          </section>
         </div>
 
         <aside class="side">
@@ -997,34 +1435,69 @@
             <div id="reserve-list" class="reserve-list" aria-live="polite"></div>
           </section>
 
-          <section aria-labelledby="sequence-title">
-            <div class="section-head">
-              <div>
-                <h2 id="sequence-title">Run sequence</h2>
-                <p class="section-note">Current experiment state</p>
-              </div>
-            </div>
-            <ol class="timeline">
-              <li id="step-tune">
-                <span class="timeline-title">Tune</span>
-                <span id="detail-tune" class="timeline-detail">Pending</span>
-              </li>
-              <li id="step-plan">
-                <span class="timeline-title">Pre-mortem</span>
-                <span id="detail-plan" class="timeline-detail">Pending</span>
-              </li>
-              <li id="step-fault">
-                <span class="timeline-title">Fault injection</span>
-                <span id="detail-fault" class="timeline-detail">Pending</span>
-              </li>
-              <li id="step-recover">
-                <span class="timeline-title">Recovery</span>
-                <span id="detail-recover" class="timeline-detail">Pending</span>
-              </li>
-            </ol>
-          </section>
         </aside>
       </div>
+      </div>
+
+      <section
+        id="sequence-panel"
+        class="view-panel sequence-panel"
+        role="tabpanel"
+        aria-labelledby="sequence-tab"
+        hidden
+      >
+        <div class="sequence-head">
+          <div>
+            <h1>Run sequence</h1>
+            <p class="section-note">Follow the winning circuit through search, fault, and recovery</p>
+          </div>
+          <div id="sequence-summary" class="sequence-summary">Run a cycle to build the sequence</div>
+        </div>
+
+        <div id="sequence-steps" class="sequence-steps" aria-label="Circuit evolution steps"></div>
+
+        <div class="sequence-layout">
+          <div class="sequence-diagram-wrap">
+            <svg
+              id="sequence-diagram"
+              class="sequence-diagram"
+              role="img"
+              aria-label="Circuit at the selected run step"
+            ></svg>
+            <div id="sequence-genes" class="sequence-gene-grid" aria-label="Capacitor branch states"></div>
+          </div>
+
+          <div>
+            <span id="sequence-stage-label" class="sequence-label">No run loaded</span>
+            <div id="sequence-step-title" class="evolution-detail-title">Run an autonomous cycle</div>
+            <p id="sequence-step-copy" class="sequence-copy">
+              The winning circuit, injected fault, and recovered circuit will appear here.
+            </p>
+            <dl class="sequence-values">
+              <div>
+                <dt>Genotype</dt>
+                <dd id="sequence-genotype">--</dd>
+              </div>
+              <div>
+                <dt>Resistance</dt>
+                <dd id="sequence-resistance">--</dd>
+              </div>
+              <div>
+                <dt>Capacitance</dt>
+                <dd id="sequence-capacitance">--</dd>
+              </div>
+              <div>
+                <dt>Response error</dt>
+                <dd id="sequence-error">--</dd>
+              </div>
+              <div>
+                <dt>Change from prior step</dt>
+                <dd id="sequence-change">--</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -1034,10 +1507,17 @@
       stage: "idle",
       loading: false,
       autoplay: false,
-      error: null
+      error: null,
+      view: "lab",
+      selectedGeneration: null,
+      sequenceSelection: null
     };
 
     const elements = {
+      labTab: document.getElementById("lab-tab"),
+      sequenceTab: document.getElementById("sequence-tab"),
+      labPanel: document.getElementById("lab-panel"),
+      sequencePanel: document.getElementById("sequence-panel"),
       cutoff: document.getElementById("cutoff"),
       cutoffValue: document.getElementById("cutoff-value"),
       budget: document.getElementById("budget"),
@@ -1059,6 +1539,15 @@
       legendRecovered: document.getElementById("legend-recovered"),
       searchTrack: document.getElementById("search-track"),
       bestObservation: document.getElementById("best-observation"),
+      evolutionLineage: document.getElementById("evolution-lineage"),
+      evolutionSummary: document.getElementById("evolution-summary"),
+      evolutionDetail: document.getElementById("evolution-detail"),
+      evolutionDetailTitle: document.getElementById("evolution-detail-title"),
+      evolutionDetailCopy: document.getElementById("evolution-detail-copy"),
+      evolutionDetailGenotype: document.getElementById("evolution-detail-genotype"),
+      evolutionDetailError: document.getElementById("evolution-detail-error"),
+      evolutionDetailDiversity: document.getElementById("evolution-detail-diversity"),
+      evolutionGroups: document.getElementById("evolution-groups"),
       resistance: document.getElementById("resistance"),
       capacitance: document.getElementById("capacitance"),
       activeBranches: document.getElementById("active-branches"),
@@ -1074,16 +1563,20 @@
       resistorPath: document.getElementById("resistor-path"),
       capLeft: document.getElementById("cap-left"),
       capRight: document.getElementById("cap-right"),
-      stepTune: document.getElementById("step-tune"),
-      stepPlan: document.getElementById("step-plan"),
-      stepFault: document.getElementById("step-fault"),
-      stepRecover: document.getElementById("step-recover"),
-      detailTune: document.getElementById("detail-tune"),
-      detailPlan: document.getElementById("detail-plan"),
-      detailFault: document.getElementById("detail-fault"),
-      detailRecover: document.getElementById("detail-recover"),
       reserveCoverage: document.getElementById("reserve-coverage"),
       reserveList: document.getElementById("reserve-list"),
+      sequenceSummary: document.getElementById("sequence-summary"),
+      sequenceSteps: document.getElementById("sequence-steps"),
+      sequenceDiagram: document.getElementById("sequence-diagram"),
+      sequenceGenes: document.getElementById("sequence-genes"),
+      sequenceStageLabel: document.getElementById("sequence-stage-label"),
+      sequenceStepTitle: document.getElementById("sequence-step-title"),
+      sequenceStepCopy: document.getElementById("sequence-step-copy"),
+      sequenceGenotype: document.getElementById("sequence-genotype"),
+      sequenceResistance: document.getElementById("sequence-resistance"),
+      sequenceCapacitance: document.getElementById("sequence-capacitance"),
+      sequenceError: document.getElementById("sequence-error"),
+      sequenceChange: document.getElementById("sequence-change"),
       themeToggle: document.getElementById("theme-toggle"),
       themeLabel: document.getElementById("theme-label")
     };
@@ -1102,6 +1595,16 @@
       } catch {
         // The toggle still works when storage is unavailable.
       }
+    }
+
+    function setView(view) {
+      state.view = view === "sequence" ? "sequence" : "lab";
+      const sequenceActive = state.view === "sequence";
+      elements.labTab.setAttribute("aria-selected", String(!sequenceActive));
+      elements.sequenceTab.setAttribute("aria-selected", String(sequenceActive));
+      elements.labPanel.hidden = sequenceActive;
+      elements.sequencePanel.hidden = !sequenceActive;
+      if (sequenceActive) renderSequence();
     }
 
     function formatFrequency(value) {
@@ -1163,6 +1666,8 @@
         if (!response.ok) throw new Error(payload.error || "Simulation failed");
         state.session = payload;
         state.stage = "commissioned";
+        state.selectedGeneration = null;
+        state.sequenceSelection = null;
         render();
         return true;
       } catch (error) {
@@ -1246,8 +1751,9 @@
         elements.measurementCount.textContent = "0";
         elements.evidenceValue.textContent = "--";
         renderConfiguration(null);
-        renderTimeline();
         renderSearch([]);
+        renderEvolution([]);
+        renderSequence();
         drawChart();
         return;
       }
@@ -1287,11 +1793,12 @@
       }
       renderConfiguration(stage);
       renderReserve();
-      renderTimeline();
       const search = state.stage === "recovered"
         ? state.session.search.recovered
         : state.session.search.commissioned;
       renderSearch(search);
+      renderEvolution(state.session.evolution?.generations || []);
+      renderSequence();
       drawChart();
     }
 
@@ -1415,55 +1922,420 @@
       });
     }
 
-    function renderTimeline() {
-      const order = ["commissioned", "fault", "recovered"];
-      const currentIndex = order.indexOf(state.stage);
-      const nodes = [
-        elements.stepTune,
-        elements.stepPlan,
-        elements.stepFault,
-        elements.stepRecover
-      ];
-      const thresholds = [0, 0, 1, 2];
-      const currentNode = [1, 2, 3][currentIndex];
-      nodes.forEach((node, index) => {
-        node.className = "";
-        if (currentIndex >= thresholds[index]) node.classList.add("complete");
-        if (currentNode === index) node.classList.add("current");
+    function configurationChanges(previous, current) {
+      if (!previous || !current) {
+        return {resistor: false, capacitors: []};
+      }
+      const changedMask = previous.capacitor_mask ^ current.capacitor_mask;
+      const capacitors = [];
+      for (let index = 0; index < 8; index += 1) {
+        if (changedMask & (1 << index)) capacitors.push(index);
+      }
+      return {
+        resistor: previous.resistor_index !== current.resistor_index,
+        capacitors
+      };
+    }
+
+    function describeCircuitChange(previous, current) {
+      if (!previous) return "Initial measured circuit";
+      const change = configurationChanges(previous, current);
+      const parts = [];
+      if (change.resistor) parts.push("resistor changed");
+      if (change.capacitors.length) {
+        parts.push(
+          `${change.capacitors.length} capacitor ` +
+          `${change.capacitors.length === 1 ? "switch" : "switches"} changed`
+        );
+      }
+      return parts.length ? parts.join(" and ") : "Circuit unchanged";
+    }
+
+    function buildSequenceSteps() {
+      if (!state.session) return [];
+      const generations = state.session.evolution.generations;
+      const steps = generations.map((generation, index) => {
+        const previous = index > 0
+          ? generations[index - 1].best_configuration
+          : null;
+        return {
+          kind: "generation",
+          shortLabel: generation.generation === 0
+            ? "Start"
+            : `Round ${generation.generation}`,
+          stageLabel: generation.generation === 0
+            ? "Starting population"
+            : `Evolution round ${generation.generation}`,
+          title: generation.best_genotype,
+          copy: generation.generation === 0
+            ? `${generation.offspring.length} circuits were measured. ` +
+              `${generation.survivors.length} formed the first population.`
+            : `${generation.offspring.length} new circuits were measured. ` +
+              `${generation.survivors.length} circuits were kept for the next round.`,
+          configuration: generation.best_configuration,
+          responseError: generation.best_response_error_db,
+          previousConfiguration: previous,
+          changeText: describeCircuitChange(
+            previous,
+            generation.best_configuration
+          ),
+          generation
+        };
       });
 
-      if (!state.session) {
-        elements.detailTune.textContent = "Pending";
-        elements.detailPlan.textContent = "Pending";
-        elements.detailFault.textContent = "Pending";
-        elements.detailRecover.textContent = "Pending";
+      const commissioned = state.session.stages.commissioned;
+      const fault = state.session.stages.fault;
+      const recovered = state.session.stages.recovered;
+      const finalGeneration = generations[generations.length - 1];
+      steps.push({
+        kind: "commissioned",
+        shortLabel: "Selected",
+        stageLabel: "Circuit selected",
+        title: "Best measured circuit",
+        copy:
+          `This circuit became the active filter. ` +
+          `${state.session.resilience.qualified_route_count} recovery routes ` +
+          `were measured before operation.`,
+        configuration: commissioned.configuration,
+        responseError: commissioned.response_error_db,
+        previousConfiguration: finalGeneration?.best_configuration || null,
+        changeText: describeCircuitChange(
+          finalGeneration?.best_configuration || null,
+          commissioned.configuration
+        )
+      });
+      steps.push({
+        kind: "fault",
+        shortLabel: "Fault",
+        stageLabel: "Fault detected",
+        title: `${fault.label} on ${fault.component}`,
+        copy:
+          `The stored response changed by ${formatError(fault.signature_error_db)}. ` +
+          `That was ${fault.signature_ratio.toFixed(1)} times the fault threshold.`,
+        configuration: fault.configuration,
+        responseError: fault.response_error_db,
+        previousConfiguration: commissioned.configuration,
+        changeText:
+          `${fault.component} changed ` +
+          `${fault.change_percent > 0 ? "+" : ""}${fault.change_percent.toFixed(0)}%`,
+        fault
+      });
+      steps.push({
+        kind: "recovered",
+        shortLabel: "Recovered",
+        stageLabel: "Recovery complete",
+        title: recovered.configuration.genotype,
+        copy:
+          `${recovered.attempted_fallbacks} reserved circuits were checked. ` +
+          `The selected route restored the response to ` +
+          `${formatError(recovered.response_error_db)} error.`,
+        configuration: recovered.configuration,
+        responseError: recovered.response_error_db,
+        previousConfiguration: commissioned.configuration,
+        changeText:
+          `${recovered.mutation_distance} switching ` +
+          `${recovered.mutation_distance === 1 ? "gene" : "genes"} changed`,
+        recovery: recovered
+      });
+      return steps;
+    }
+
+    function sequenceDefaultIndex(steps) {
+      if (!steps.length) return 0;
+      const generationCount = state.session.evolution.generations.length;
+      if (state.stage === "fault") return generationCount + 1;
+      if (state.stage === "recovered") return generationCount + 2;
+      return generationCount;
+    }
+
+    function renderSequence() {
+      elements.sequenceSteps.replaceChildren();
+      elements.sequenceGenes.replaceChildren();
+      const steps = buildSequenceSteps();
+      if (!steps.length) {
+        elements.sequenceSummary.textContent = "Run a cycle to build the sequence";
+        elements.sequenceStageLabel.textContent = "No run loaded";
+        elements.sequenceStepTitle.textContent = "Run an autonomous cycle";
+        elements.sequenceStepCopy.textContent =
+          "The winning circuit, injected fault, and recovered circuit will appear here.";
+        elements.sequenceGenotype.textContent = "--";
+        elements.sequenceResistance.textContent = "--";
+        elements.sequenceCapacitance.textContent = "--";
+        elements.sequenceError.textContent = "--";
+        elements.sequenceChange.textContent = "--";
+        drawSequenceCircuit(null);
         return;
       }
 
-      const tuned = state.session.stages.commissioned;
+      const fallbackIndex = sequenceDefaultIndex(steps);
+      const selectedIndex = Number.isInteger(state.sequenceSelection)
+        ? Math.min(state.sequenceSelection, steps.length - 1)
+        : fallbackIndex;
+      const selected = steps[selectedIndex];
       const fault = state.session.stages.fault;
       const recovered = state.session.stages.recovered;
-      const searchOrigin = state.session.meta.warm_started
-        ? "memory start"
-        : "cold start";
-      elements.detailTune.textContent =
-        `${searchOrigin} / ${state.session.meta.budget} search tests / ` +
-        `${formatError(tuned.response_error_db)}`;
-      elements.detailPlan.textContent =
-        `${state.session.resilience.qualification_measurements} tests / ` +
-        `${state.session.resilience.qualified_route_count} routes / ` +
-        `${state.session.resilience.coverage_percent.toFixed(0)}% coverage`;
-      elements.detailFault.textContent = currentIndex >= 1
-        ? `${fault.component} ${fault.change_percent > 0 ? "+" : ""}` +
-          `${fault.change_percent.toFixed(0)}% / ` +
-          `${fault.signature_ratio.toFixed(1)}× threshold`
-        : "Pending";
-      elements.detailRecover.textContent = currentIndex >= 2
-        ? `${recovered.attempted_fallbacks} reflex probes / ` +
-          `${recovered.mutation_distance} switch mutations / ` +
-          `${recovered.search_measurements_avoided} search tests avoided / ` +
-          `${formatError(recovered.response_error_db)}`
-        : "Pending";
+      elements.sequenceSummary.textContent =
+        `${state.session.evolution.generation_count} search rounds / ` +
+        `${fault.component} fault / ` +
+        `${recovered.attempted_fallbacks} recovery probes`;
+
+      steps.forEach((step, index) => {
+        const button = document.createElement("button");
+        button.className = "sequence-step";
+        button.type = "button";
+        button.setAttribute("aria-pressed", String(index === selectedIndex));
+        button.setAttribute(
+          "aria-label",
+          `${step.stageLabel}, ${formatError(step.responseError)} response error`
+        );
+        const number = document.createElement("span");
+        number.className = "sequence-step-index";
+        number.textContent = `${String(index + 1).padStart(2, "0")}`;
+        const name = document.createElement("span");
+        name.className = "sequence-step-name";
+        name.textContent = step.shortLabel;
+        button.append(number, name);
+        button.addEventListener("click", () => {
+          state.sequenceSelection = index;
+          renderSequence();
+        });
+        elements.sequenceSteps.appendChild(button);
+      });
+
+      const configuration = selected.configuration;
+      elements.sequenceStageLabel.textContent = selected.stageLabel;
+      elements.sequenceStepTitle.textContent = selected.title;
+      elements.sequenceStepCopy.textContent = selected.copy;
+      elements.sequenceGenotype.textContent = configuration.genotype;
+      elements.sequenceResistance.textContent = formatResistance(
+        configuration.nominal_resistance_ohms
+      );
+      elements.sequenceCapacitance.textContent = formatCapacitance(
+        configuration.nominal_capacitance_nf
+      );
+      elements.sequenceError.textContent = formatError(selected.responseError);
+      elements.sequenceChange.textContent = selected.changeText;
+      drawSequenceCircuit(selected);
+      renderSequenceGenes(selected);
+    }
+
+    function drawSequenceCircuit(step) {
+      const svg = elements.sequenceDiagram;
+      const compact = svg.clientWidth < 500;
+      const layout = compact
+        ? {
+            width: 360,
+            height: 230,
+            stateX: 14,
+            stateY: 24,
+            genotypeX: 346,
+            vinX: 14,
+            signalY: 104,
+            inputWire: "M 42 100 L 60 100",
+            resistor: "M 60 100 L 70 88 L 82 112 L 94 88 L 106 112 L 118 88 L 130 100 L 145 100",
+            outputWire: "M 145 100 L 300 100",
+            nodeX: 205,
+            nodeY: 100,
+            voutX: 310,
+            resistorLabelX: 102,
+            resistorLabelY: 70,
+            capacitorStem: "M 205 100 L 205 137",
+            capacitorTop: "M 180 137 L 230 137",
+            capacitorBottom: "M 180 147 L 230 147",
+            ground: "M 205 147 L 205 185 M 178 185 L 232 185 M 188 195 L 222 195 M 198 205 L 212 205",
+            capacitorLabelX: 238,
+            capacitorLabelY: 147,
+            faultY: 218
+          }
+        : {
+            width: 700,
+            height: 280,
+            stateX: 28,
+            stateY: 34,
+            genotypeX: 672,
+            vinX: 28,
+            signalY: 143,
+            inputWire: "M 62 138 L 105 138",
+            resistor: "M 105 138 L 120 120 L 140 156 L 160 120 L 180 156 L 200 120 L 220 138",
+            outputWire: "M 220 138 L 552 138",
+            nodeX: 350,
+            nodeY: 138,
+            voutX: 566,
+            resistorLabelX: 162,
+            resistorLabelY: 96,
+            capacitorStem: "M 350 138 L 350 176",
+            capacitorTop: "M 320 176 L 380 176",
+            capacitorBottom: "M 320 188 L 380 188",
+            ground: "M 350 188 L 350 225 M 320 225 L 380 225 M 330 236 L 370 236 M 341 247 L 359 247",
+            capacitorLabelX: 396,
+            capacitorLabelY: 187,
+            faultY: 257
+          };
+      svg.setAttribute("viewBox", `0 0 ${layout.width} ${layout.height}`);
+      svg.replaceChildren();
+      const make = (name, attributes = {}) => {
+        const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+        Object.entries(attributes).forEach(([key, value]) => {
+          node.setAttribute(key, value);
+        });
+        return node;
+      };
+      const title = make("title");
+      title.textContent = step
+        ? `Circuit at ${step.stageLabel}`
+        : "Circuit sequence awaiting a run";
+      svg.appendChild(title);
+      const description = make("desc");
+      description.textContent = step
+        ? `${step.configuration.genotype}, ${step.changeText}.`
+        : "No circuit has been selected.";
+      svg.appendChild(description);
+
+      if (!step) {
+        const empty = make("text", {
+          x: layout.width / 2,
+          y: layout.height / 2,
+          "text-anchor": "middle",
+          class: "sequence-state-label"
+        });
+        empty.textContent = "Run a cycle to draw the circuit";
+        svg.appendChild(empty);
+        return;
+      }
+
+      const configuration = step.configuration;
+      const change = configurationChanges(
+        step.previousConfiguration,
+        configuration
+      );
+      const fault = step.kind === "fault" ? step.fault : null;
+      const resistorFault = fault?.kind === "resistor_drift";
+      const capacitorFault = fault && fault.kind !== "resistor_drift";
+      const resistorClass = resistorFault
+        ? "sequence-component sequence-fault"
+        : change.resistor
+          ? "sequence-component sequence-change"
+          : "sequence-component";
+      const capacitorClass = capacitorFault
+        ? "sequence-component sequence-fault"
+        : change.capacitors.length
+          ? "sequence-component sequence-change"
+          : "sequence-component";
+
+      const stateLabel = make("text", {
+        x: layout.stateX,
+        y: layout.stateY,
+        class: "sequence-state-label"
+      });
+      stateLabel.textContent = step.stageLabel;
+      svg.appendChild(stateLabel);
+      const genotype = make("text", {
+        x: layout.genotypeX,
+        y: layout.stateY,
+        "text-anchor": "end"
+      });
+      genotype.textContent = configuration.genotype;
+      svg.appendChild(genotype);
+
+      const vin = make("text", {x: layout.vinX, y: layout.signalY});
+      vin.textContent = "VIN";
+      svg.appendChild(vin);
+      svg.appendChild(make("path", {
+        d: layout.inputWire,
+        class: "sequence-wire"
+      }));
+      svg.appendChild(make("path", {
+        d: layout.resistor,
+        class: resistorClass
+      }));
+      svg.appendChild(make("path", {
+        d: layout.outputWire,
+        class: "sequence-wire"
+      }));
+      svg.appendChild(make("circle", {
+        cx: layout.nodeX,
+        cy: layout.nodeY,
+        r: 4,
+        class: "sequence-node"
+      }));
+      const vout = make("text", {x: layout.voutX, y: layout.signalY});
+      vout.textContent = "VOUT";
+      svg.appendChild(vout);
+      const resistorLabel = make("text", {
+        x: layout.resistorLabelX,
+        y: layout.resistorLabelY,
+        "text-anchor": "middle"
+      });
+      resistorLabel.textContent =
+        `R${configuration.resistor_index + 1}  ` +
+        `${formatResistance(configuration.nominal_resistance_ohms)}`;
+      svg.appendChild(resistorLabel);
+
+      svg.appendChild(make("path", {
+        d: layout.capacitorStem,
+        class: "sequence-wire"
+      }));
+      svg.appendChild(make("path", {
+        d: layout.capacitorTop,
+        class: capacitorClass
+      }));
+      svg.appendChild(make("path", {
+        d: layout.capacitorBottom,
+        class: capacitorClass
+      }));
+      svg.appendChild(make("path", {
+        d: layout.ground,
+        class: "sequence-wire"
+      }));
+      const capacitorLabel = make("text", {
+        x: layout.capacitorLabelX,
+        y: layout.capacitorLabelY
+      });
+      capacitorLabel.textContent =
+        `CΣ  ${formatCapacitance(configuration.nominal_capacitance_nf)}`;
+      svg.appendChild(capacitorLabel);
+
+      if (fault) {
+        const faultLabel = make("text", {
+          x: layout.stateX,
+          y: layout.faultY,
+          class: "sequence-state-label"
+        });
+        faultLabel.textContent =
+          `${fault.component} ${fault.change_percent > 0 ? "+" : ""}` +
+          `${fault.change_percent.toFixed(0)}%`;
+        svg.appendChild(faultLabel);
+      }
+    }
+
+    function renderSequenceGenes(step) {
+      const configuration = step.configuration;
+      const change = configurationChanges(
+        step.previousConfiguration,
+        configuration
+      );
+      const faultIndex = step.kind === "fault" &&
+        step.fault.kind !== "resistor_drift"
+        ? step.fault.component_index
+        : null;
+      state.session.component_bank.capacitor_nf.forEach((value, index) => {
+        const active = Boolean(configuration.capacitor_mask & (1 << index));
+        const cell = document.createElement("div");
+        cell.className = "sequence-gene";
+        if (active) cell.classList.add("active");
+        if (change.capacitors.includes(index)) cell.classList.add("changed");
+        if (faultIndex === index) cell.classList.add("fault");
+        const name = document.createElement("span");
+        name.className = "sequence-gene-name";
+        name.textContent = `C${index + 1} ${active ? "on" : "off"}`;
+        const amount = document.createElement("span");
+        amount.className = "sequence-gene-value";
+        amount.textContent = value < 1
+          ? `${(value * 1000).toFixed(0)} pF`
+          : `${value.toFixed(value < 10 ? 1 : 0)} nF`;
+        cell.append(name, amount);
+        elements.sequenceGenes.appendChild(cell);
+      });
     }
 
     function renderSearch(observations) {
@@ -1510,6 +2382,136 @@
       elements.bestObservation.textContent =
         `${memoryLabel}${observationLabel} / ` +
         `best ${bestError.toFixed(3)} dB RMS`;
+    }
+
+    function renderEvolution(generations) {
+      elements.evolutionLineage.replaceChildren();
+      if (!generations.length) {
+        elements.evolutionSummary.textContent = "No generations";
+        elements.evolutionDetail.hidden = true;
+        elements.evolutionGroups.replaceChildren();
+        return;
+      }
+      const first = generations[0];
+      const last = generations[generations.length - 1];
+      elements.evolutionSummary.textContent =
+        `${generations.length} measured rounds / ` +
+        `${first.best_response_error_db.toFixed(3)} to ` +
+        `${last.best_response_error_db.toFixed(3)} dB`;
+
+      const selectedIndex = Number.isInteger(state.selectedGeneration)
+        ? Math.min(state.selectedGeneration, generations.length - 1)
+        : generations.length - 1;
+
+      generations.forEach((generation, index) => {
+        const row = document.createElement("button");
+        row.className = "evolution-row";
+        row.type = "button";
+        row.setAttribute("aria-pressed", String(index === selectedIndex));
+        row.setAttribute(
+          "aria-label",
+          `${generation.generation === 0 ? "Starting population" : `Round ${generation.generation}`}, ` +
+          `best circuit ${generation.best_genotype}, ` +
+          `${formatError(generation.best_response_error_db)} response error`
+        );
+
+        const label = document.createElement("div");
+        label.className = "evolution-generation";
+        const labelTitle = document.createElement("strong");
+        labelTitle.textContent = generation.generation === 0
+          ? "Start"
+          : `Round ${generation.generation}`;
+        const labelCode = document.createElement("span");
+        labelCode.textContent = `G${generation.generation}`;
+        label.append(labelTitle, labelCode);
+
+        const route = document.createElement("div");
+        route.className = "evolution-route";
+        const genotype = document.createElement("span");
+        genotype.className = "evolution-genotype";
+        genotype.textContent = generation.best_genotype;
+        const operations = document.createElement("span");
+        operations.className = "evolution-operations";
+        operations.textContent = generation.generation === 0
+          ? `${generation.offspring.length} starting circuits measured`
+          : `${generation.crossover_events} parent pairings / ` +
+            `${generation.mutation_events} gene changes / ` +
+            `${generation.immigrant_count} fresh circuits`;
+        const componentValues = document.createElement("span");
+        componentValues.className = "evolution-operations";
+        componentValues.textContent =
+          `${formatResistance(generation.best_configuration.nominal_resistance_ohms)} / ` +
+          `${formatCapacitance(generation.best_configuration.nominal_capacitance_nf)}`;
+        route.append(genotype, componentValues);
+
+        const metrics = document.createElement("div");
+        metrics.className = "evolution-metrics";
+        metrics.textContent = `${generation.best_response_error_db.toFixed(3)} dB RMS`;
+        const diversityTrack = document.createElement("span");
+        diversityTrack.className = "diversity-track";
+        const diversityValue = document.createElement("span");
+        diversityValue.className = "diversity-value";
+        diversityValue.style.width =
+          `${Math.max(2, generation.diversity * 100)}%`;
+        diversityTrack.appendChild(diversityValue);
+        metrics.appendChild(diversityTrack);
+
+        row.append(label, route, operations, metrics);
+        row.addEventListener("click", () => {
+          state.selectedGeneration = index;
+          renderEvolution(generations);
+        });
+        elements.evolutionLineage.appendChild(row);
+      });
+      renderEvolutionDetail(generations[selectedIndex]);
+    }
+
+    function renderEvolutionDetail(generation) {
+      elements.evolutionDetail.hidden = false;
+      elements.evolutionGroups.replaceChildren();
+      const starting = generation.generation === 0;
+      elements.evolutionDetailTitle.textContent = starting
+        ? "Starting population"
+        : `Round ${generation.generation}`;
+      elements.evolutionDetailCopy.textContent = starting
+        ? `${generation.offspring.length} circuits were measured to establish a baseline. ` +
+          `${generation.survivors.length} were kept.`
+        : `${generation.parents.length} parent circuits produced ` +
+          `${generation.offspring.length} measured circuits. ` +
+          `${generation.survivors.length} were kept for the next round.`;
+      elements.evolutionDetailGenotype.textContent = generation.best_genotype;
+      elements.evolutionDetailError.textContent = formatError(
+        generation.best_response_error_db
+      );
+      elements.evolutionDetailDiversity.textContent =
+        `${(generation.diversity * 100).toFixed(0)}%`;
+
+      const groups = starting
+        ? [
+            ["Starting circuits", generation.offspring],
+            ["Kept", generation.survivors]
+          ]
+        : [
+            ["Parents", generation.parents],
+            ["Measured this round", generation.offspring],
+            ["Kept", generation.survivors]
+          ];
+      groups.forEach(([label, genotypes]) => {
+        const group = document.createElement("div");
+        group.className = "lineage-group";
+        const groupLabel = document.createElement("span");
+        groupLabel.className = "lineage-group-label";
+        groupLabel.textContent = `${label} (${genotypes.length})`;
+        const codes = document.createElement("div");
+        codes.className = "lineage-codes";
+        genotypes.forEach(genotype => {
+          const code = document.createElement("code");
+          code.textContent = genotype;
+          codes.appendChild(code);
+        });
+        group.append(groupLabel, codes);
+        elements.evolutionGroups.appendChild(group);
+      });
     }
 
     function drawChart() {
@@ -1642,8 +2644,22 @@
       state.session = null;
       state.stage = "idle";
       state.error = null;
+      state.selectedGeneration = null;
+      state.sequenceSelection = null;
       setLoading(false);
       render();
+    });
+    elements.labTab.addEventListener("click", () => setView("lab"));
+    elements.sequenceTab.addEventListener("click", () => setView("sequence"));
+    [elements.labTab, elements.sequenceTab].forEach((tab, index, tabs) => {
+      tab.addEventListener("keydown", event => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        const direction = event.key === 'ArrowRight' ? 1 : -1;
+        const next = tabs[(index + direction + tabs.length) % tabs.length];
+        next.focus();
+        next.click();
+      });
     });
     elements.autopilot.addEventListener("click", runAutonomousCycle);
     elements.tune.addEventListener("click", tuneCircuit);
@@ -1655,8 +2671,17 @@
       setTheme(current === "dark" ? "light" : "dark");
     });
     new ResizeObserver(drawChart).observe(elements.chart);
+    new ResizeObserver(() => {
+      if (!state.session || state.view !== "sequence") return;
+      const steps = buildSequenceSteps();
+      const selectedIndex = Number.isInteger(state.sequenceSelection)
+        ? Math.min(state.sequenceSelection, steps.length - 1)
+        : sequenceDefaultIndex(steps);
+      drawSequenceCircuit(steps[selectedIndex] || null);
+    }).observe(elements.sequenceDiagram);
 
     setTheme(document.documentElement.dataset.theme);
+    setView(state.view);
     render();
   </script>
 </body>

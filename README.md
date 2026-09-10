@@ -4,19 +4,38 @@
   <img src="docs/assets/darwin-board-logo-transparent.png" alt="Darwin Board logo" width="360">
 </p>
 
-![Darwin Board system](docs/assets/darwin-board-system.svg)
+Darwin Board is an ESP32-controlled RC filter with 2,040 possible circuit
+paths. It searches for a path that matches a requested cutoff frequency,
+measures the result, stores reliable alternatives, and changes route when the
+active circuit degrades.
 
-Darwin Board is a self-tuning RC filter with reconfigurable component paths.
-Set a cutoff frequency and the controller finds a matching circuit, checks a
-backup for each active component, and monitors the response. If a component
-fails, it tries the prepared backups before starting a fresh search.
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Requested cutoff frequency] --> B[Generate circuit genotypes]
+    B --> C[Evolutionary search and Bayesian ranking]
+    C --> D[ESP32 configures the component path]
+    D --> E[Measure the circuit response]
+    E --> F{Within tolerance?}
+    F -->|No| C
+    F -->|Yes| G[Activate the best path and qualify backups]
+    G --> H[Monitor the response]
+    H --> I{Degradation detected?}
+    I -->|No| H
+    I -->|Yes| J[Switch to a qualified backup]
+    J --> K{Recovery successful?}
+    K -->|Yes| H
+    K -->|No| C
+```
 
 ## How it works
 
-1. The optimizer measures promising resistor and capacitor paths.
-2. The best path becomes active while backups are tested in advance.
-3. Repeated health checks detect a lasting change in the filter response.
-4. The controller tries its prepared backups, then searches again if needed.
+1. Each resistor and capacitor combination receives a binary genotype.
+2. Measured survivors produce children through crossover and mutation.
+3. A Bayesian model chooses which children are worth testing on hardware.
+4. The strongest route becomes active while backups are tested in advance.
+5. Health checks detect response changes and trigger recovery.
 
 ## Run the lab
 

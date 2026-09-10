@@ -20,7 +20,7 @@ USB host
 ESP32 serial protocol
    |------------------------------|
    |                              |
-Bayesian search              switch control
+Evolutionary search          switch control
                                   |
 GPIO25 DAC -> selectable R -> switched C bank -> GPIO34 ADC
                                   |
@@ -39,18 +39,18 @@ transient and estimate the cutoff.
 
 ### Stage 2: reconfigurable filter
 
-Add six resistor choices and six switched capacitor branches:
+Add eight resistor choices and eight switched capacitor branches:
 
-- resistor taps: 2.2 kΩ, 4.7 kΩ, 10 kΩ, 22 kΩ, 47 kΩ, 100 kΩ
-- capacitor branches: 1 nF, 2.2 nF, 4.7 nF, 10 nF, 22 nF, 47 nF
+- resistor taps: 1 kΩ, 2.2 kΩ, 4.7 kΩ, 10 kΩ, 22 kΩ, 47 kΩ, 100 kΩ, 220 kΩ
+- capacitor branches: 470 pF, 1 nF, 2.2 nF, 4.7 nF, 10 nF, 22 nF, 47 nF, 100 nF
 
-The capacitor branches form 63 non-empty combinations. Six resistor choices
-produce 378 available configurations.
+The capacitor branches form 255 non-empty combinations. Eight resistor choices
+produce 2,040 available configurations.
 
-The firmware reserves GPIO21, GPIO22, and GPIO23 for resistor addressing, and
-GPIO13, GPIO14, GPIO16, GPIO17, GPIO18, and GPIO19 for capacitor controls.
-Suitable analog switches or small-signal MOSFET stages are still required
-between these control pins and the analog network.
+GPIO21, GPIO22, and GPIO23 address an eight-channel resistor multiplexer.
+GPIO13, GPIO14, and GPIO16 drive the data, clock, and latch inputs of an
+eight-output shift register for the capacitor switches. Analog switches remain
+between this digital control fabric and the RC signal path.
 
 ## Measurement strategy
 

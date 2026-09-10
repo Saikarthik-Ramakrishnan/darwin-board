@@ -113,6 +113,7 @@ class DarwinController:
             result = TuningResult(
                 best=min(evaluations, key=lambda item: item.score),
                 evaluations=evaluations,
+                generations=result.generations,
             )
         self.contingency_plan = self.resilience_planner.plan(
             result,
@@ -121,6 +122,7 @@ class DarwinController:
         result = TuningResult(
             best=self.contingency_plan.primary,
             evaluations=result.evaluations,
+            generations=result.generations,
         )
         self._activate(result)
         self._remember(result)

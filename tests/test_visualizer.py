@@ -1,7 +1,7 @@
 import unittest
 
 from darwin_board.evidence import verify_payload
-from darwin_board.visualizer_server import build_session
+from darwin_board.visualizer_server import INDEX_PATH, build_session
 from darwin_board.memory import ExperienceMemory
 
 
@@ -16,7 +16,7 @@ class VisualizerSessionTest(unittest.TestCase):
             32,
         )
         self.assertTrue(session["stages"]["fault"]["detected"])
-        self.assertEqual(session["schema_version"], "0.5")
+        self.assertEqual(session["schema_version"], "0.6")
         self.assertTrue(verify_payload(session))
         self.assertEqual(session["meta"]["backend"], "digital_twin")
         self.assertEqual(session["stages"]["fault"]["health_sweeps"], 3)
@@ -48,12 +48,49 @@ class VisualizerSessionTest(unittest.TestCase):
         )
         self.assertRegex(
             session["stages"]["commissioned"]["configuration"]["genotype"],
-            r"^R[1-6]:C[01]{6}$",
+            r"^R[01]{3}:C[01]{8}$",
         )
+        self.assertEqual(session["meta"]["candidate_count"], 2_040)
+        self.assertGreaterEqual(session["evolution"]["generation_count"], 2)
+        self.assertEqual(
+            session["evolution"]["generation_count"],
+            len(session["evolution"]["generations"]),
+        )
+        self.assertTrue(
+            any(
+                generation["crossover_events"] > 0
+                for generation in session["evolution"]["generations"][1:]
+            )
+        )
+        for generation in session["evolution"]["generations"]:
+            self.assertEqual(
+                generation["best_genotype"],
+                generation["best_configuration"]["genotype"],
+            )
+            self.assertGreaterEqual(
+                generation["best_response_error_db"],
+                0.0,
+            )
+            self.assertEqual(
+                len(generation["survivor_error_range_db"]),
+                2,
+            )
+            self.assertLessEqual(
+                generation["survivor_error_range_db"][0],
+                generation["survivor_error_range_db"][1],
+            )
         self.assertGreaterEqual(
             session["stages"]["recovered"]["mutation_distance"],
             1,
         )
+
+    def test_visualizer_has_lab_and_run_sequence_tabs(self) -> None:
+        source = INDEX_PATH.read_text()
+
+        self.assertIn('id="lab-tab"', source)
+        self.assertIn('id="sequence-tab"', source)
+        self.assertIn('id="sequence-diagram"', source)
+        self.assertIn('id="evolution-detail"', source)
 
     def test_session_validates_controls(self) -> None:
         with self.assertRaises(ValueError):

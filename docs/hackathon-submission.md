@@ -20,21 +20,22 @@ reconfiguration.
 
 ## Solution
 
-Darwin Board treats circuit configuration as an experimental search problem.
-It measures candidate resistor and capacitor paths, uses Bayesian optimization
-to choose each next test, then performs a failure pre-mortem. Before activation,
-it measures escape routes that avoid every component in the selected path. When
+Darwin Board treats circuit configuration as measured evolution. Strong
+hardware genotypes survive, crossover and mutation produce children, and a
+Bayesian ensemble chooses which child to test next. Before activation, it
+measures escape routes that avoid every component in the selected path. When
 the behavior changes, it probes that small reserve and restores the requested
 cutoff.
 
 Each configuration has a compact hardware genotype such as
-`R3:C010101`. Recovery is recorded as a mutation from the original genotype.
+`R010:C00101010`. Recovery is recorded as a mutation from the original genotype.
 Every exported run also carries a deterministic run ID and SHA-256 digest so
 the evidence can be checked after export.
 
 ## Key features
 
-- Search across 378 hardware configurations
+- Evolution across 2,040 uniquely encoded hardware configurations
+- Measured selection, crossover, mutation, elitism, and diversity injection
 - Experience memory for later tuning runs
 - Median-aggregated health checks
 - Measured single-fault contingency atlas
@@ -53,9 +54,9 @@ the evidence can be checked after export.
 
 ## Technologies
 
-Python, NumPy, Gaussian-process search, HTML, CSS, JavaScript, ESP32 Arduino,
-PlatformIO, USB serial, ADC sampling, DAC step generation, and JSON evidence
-exports.
+Python, NumPy, evolutionary search, Gaussian-process ensembles, HTML, CSS,
+JavaScript, ESP32 Arduino, PlatformIO, USB serial, ADC sampling, DAC step
+generation, and JSON evidence exports.
 
 ## Current evidence
 
@@ -66,9 +67,9 @@ exports.
 - 100% fault detection
 - 100% recovery below 1 dB RMS response error
 - 100% recovery through the pre-qualified reflex
-- four recovery probes at the median
-- 20 search measurements avoided at the median
-- 22 automated tests
+- three recovery probes at the median
+- 21 search measurements avoided at the median
+- 30 automated tests
 - ESP32 firmware compiled for `esp32dev`
 
 The benchmark is simulation evidence. Physical measurements should be labeled
@@ -81,15 +82,16 @@ separately.
 Show the empty lab and set a 1.2 kHz target.
 
 > Most analog circuits keep one fixed component path. Darwin Board can search
-> 378 paths and learn which one best matches the response I ask for.
+> 2,040 paths and evolve a measured hardware genotype for the response I ask
+> for.
 
 ### 12 to 30 seconds
 
 Select **Run autonomous cycle** and pause on the tuned response.
 
-> A Bayesian tuner chooses which hardware configuration to measure next. It
-> stores the best response, then measures escape routes for every component in
-> the selected hardware genotype.
+> Measured survivors breed new circuits through crossover and mutation. A
+> Bayesian model chooses which children to test, then the controller measures
+> escape routes for every component in the selected genotype.
 
 ### 30 to 48 seconds
 

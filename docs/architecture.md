@@ -10,7 +10,7 @@ prototype.
 requested cutoff
        |
        v
-experience memory --> Bayesian tuner --> candidate component path
+experience memory --> evolutionary Bayesian tuner --> candidate genotype
                             ^                       |
                             |                       v
                      measured error <------ pre-mortem qualification
@@ -24,8 +24,8 @@ experience memory --> Bayesian tuner --> candidate component path
                                   fault detected --> reserved reflex
 ```
 
-The component bank contains six resistor choices and 63 non-empty parallel
-capacitor combinations, giving 378 possible paths.
+The component bank contains eight resistor choices and 255 non-empty parallel
+capacitor combinations, giving 2,040 possible paths.
 
 ## Learning a configuration
 
@@ -34,13 +34,16 @@ requested cutoff. The ideal RC equations score every route before measurement,
 and the strongest nominal route plus reproducible exploratory probes complete
 the initial sample set.
 
-The tuner then learns the difference between the nominal score and the measured
-score. This residual is smaller and smoother than the complete response, which
-makes it harder for measurement noise to distort the model. Three regularized
-Gaussian processes use different kernel scales. Their average supplies the
-prediction, while their disagreement increases the reported uncertainty.
-Capacitor-mask features also distinguish routes with similar total capacitance
-but different physical components.
+The measured routes form a population. Strong routes survive, tournament
+selection chooses parents, and uniform crossover combines their capacitor
+genes. Mutation can move the resistor allele or flip capacitor genes. Random
+immigrants protect diversity and reduce premature convergence.
+
+The tuner learns the difference between the nominal score and the measured
+score. Three regularized Gaussian processes use different kernel scales to
+rank the new children. Their average supplies the prediction, while their
+disagreement increases uncertainty. This hybrid keeps the search grounded in
+physical measurements while avoiding an exhaustive test of all 2,040 routes.
 
 Later experiments minimize a lower confidence bound:
 
@@ -78,11 +81,12 @@ which component will fail.
 
 ## Genotype and evidence
 
-Each switching state is represented as a compact hardware genotype. For
-example, `R3:C010101` selects resistor path 3 and a six-bit capacitor mask.
-Recovery records the Hamming distance between the commissioned and recovered
-genotypes, the changed capacitor branches, and whether the failed path was
-bypassed.
+Each switching state has a canonical hardware genotype. For example,
+`R010:C00101010` selects resistor allele 2 and an eight-bit capacitor mask.
+The catalog is bijective, so every one of the 2,040 routes has one unique code
+that can be decoded back into its switching configuration. Recovery records
+the genetic distance from the commissioned route, the changed capacitor
+branches, and whether the failed path was bypassed.
 
 Experiment and benchmark exports use canonical JSON ordering and a SHA-256
 digest. The digest produces a short run ID and can be checked with:
@@ -191,6 +195,6 @@ measurement electronics.
 2. **Complete:** 90-run digital-twin benchmark.
 3. **Complete:** pre-mortem qualification and reserved-reflex benchmark.
 4. **Next:** fixed-RC ESP32 step measurement on a breadboard.
-5. **Then:** six-resistor and six-capacitor switch fabric.
+5. **Then:** eight-resistor and eight-capacitor switch fabric.
 6. **College lab:** direct frequency sweep and oscilloscope comparison.
 7. **Final:** physical fault benchmark and compact PCB.

@@ -22,8 +22,9 @@ Choose a 1.2 kHz target and click **Run autonomous cycle**.
 
 Voice:
 
-> It searches 378 resistor and capacitor paths using uncertainty-aware Bayesian
-> optimization.
+> It evolves measured hardware genotypes across 2,040 resistor and capacitor
+> paths. Selection, crossover, and mutation produce each new generation while
+> a Bayesian model decides which children are worth testing.
 
 ### 15 to 24 seconds
 
@@ -70,11 +71,12 @@ component changes?
 Darwin Board is my answer so far.
 
 The current milestone is a hardware-ready digital twin of a reconfigurable RC
-filter with 378 possible configurations. A Gaussian-process optimizer chooses
-which physical experiment to run next. Before activation, a pre-mortem measures
-escape routes for every component in the selected path. If the response later
-changes, the controller probes that small reserve before starting another
-search.
+filter with 2,040 possible configurations. Each path has a unique binary
+genotype. Measured survivors produce new routes through crossover and mutation,
+and a Gaussian-process ensemble ranks which children deserve a physical test.
+Before activation, a pre-mortem measures escape routes for every component in
+the selected path. If the response later changes, the controller probes that
+small reserve before starting another search.
 
 Current simulation benchmark:
 
@@ -82,9 +84,9 @@ Current simulation benchmark:
 - 100% fault detection
 - 100% recovery below 1 dB RMS error
 - 100% recovery through the pre-qualified reflex
-- 4 recovery probes at the median
-- 20 search measurements avoided at the median
-- 0.048 dB median recovered error
+- 3 recovery probes at the median
+- 21 search measurements avoided at the median
+- 0.028 dB median recovered error
 
 I also added experience memory and SHA-256 sealed run evidence.
 

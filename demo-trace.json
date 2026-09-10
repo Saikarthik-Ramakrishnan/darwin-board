@@ -1,60 +1,67 @@
 {
-  "schema_version": "0.5",
+  "schema_version": "0.6",
   "requested_cutoff_hz": 1200.0,
   "commissioned": {
-    "resistor_index": 1,
-    "capacitor_mask": 20,
-    "genotype": "R2:C010100",
+    "resistor_index": 0,
+    "capacitor_mask": 176,
+    "genotype": "R000:C10110000",
     "active_capacitors": [
-      2,
-      4
+      4,
+      5,
+      7
     ],
-    "nominal_resistance_ohms": 4700.0,
-    "nominal_capacitance_nf": 26.7,
-    "physical_cutoff_hz": 1233.5423121579122,
-    "response_error_db": 0.16093803997268236,
+    "nominal_resistance_ohms": 1000.0,
+    "nominal_capacitance_nf": 132.0,
+    "physical_cutoff_hz": 1178.8221848023368,
+    "response_error_db": 0.1056670767331583,
     "measurements": 30
   },
   "resilience": {
     "coverage_percent": 100.0,
-    "qualified_route_count": 2,
+    "qualified_route_count": 4,
     "qualification_measurements": 6,
-    "worst_preflight_error_db": 0.029242629902237235
+    "worst_preflight_error_db": 0.037071729935050125
+  },
+  "evolution": {
+    "generation_count": 6,
+    "final_diversity": 0.3492063492063492,
+    "best_genotype": "R000:C10110000"
   },
   "fault": {
     "type": "open_capacitor",
-    "capacitor_index": 4,
-    "nominal_capacitance_nf": 22.0,
+    "capacitor_index": 7,
+    "nominal_capacitance_nf": 100.0,
     "detected": true,
-    "signature_error_db": 8.166285384236339,
+    "signature_error_db": 7.181498705580033,
     "health_sweeps": 3,
     "sweep_errors_db": [
-      8.166285384236339,
-      8.161581759716537,
-      8.170012095675435
+      7.181498705580033,
+      7.179420908692926,
+      7.189397075986941
     ]
   },
   "recovered": {
-    "resistor_index": 0,
-    "capacitor_mask": 42,
-    "genotype": "R1:C101010",
+    "resistor_index": 1,
+    "capacitor_mask": 85,
+    "genotype": "R001:C01010101",
     "active_capacitors": [
-      1,
-      3,
-      5
+      0,
+      2,
+      4,
+      6
     ],
     "nominal_resistance_ohms": 2200.0,
-    "nominal_capacitance_nf": 59.2,
-    "physical_cutoff_hz": 1205.4528704233994,
-    "response_error_db": 0.032653047972236636,
-    "measurements": 2,
+    "nominal_capacitance_nf": 59.67,
+    "physical_cutoff_hz": 1200.9833008389157,
+    "response_error_db": 0.019933019933169465,
+    "measurements": 4,
     "recovery_mode": "prequalified reflex",
-    "search_measurements_avoided": 22
+    "search_measurements_avoided": 20
   },
-  "total_board_measurements": 37,
+  "total_board_measurements": 39,
   "evidence": {
-    "run_id": "DB-6CC292639F81",
-    "payload_sha256": "6cc292639f81c688093e5de95f35db608feb222d8d08cfbe0d5aa486fe1ed876",
+    "run_id": "DB-2D31FBC6E725",
+    "payload_sha256": "2d31fbc6e72590b40952417c894780acf6e30b5edae20b8f0a49217e0911fec5",
     "algorithm": "SHA-256"
   }
 }

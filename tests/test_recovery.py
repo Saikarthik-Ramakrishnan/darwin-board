@@ -17,7 +17,7 @@ class DarwinBoardRecoveryTest(unittest.TestCase):
         )
         self.assertTrue(
             any(
-                item.selection_method == "lower confidence bound"
+                item.selection_method.startswith("evolutionary")
                 for item in commissioned.evaluations
             )
         )

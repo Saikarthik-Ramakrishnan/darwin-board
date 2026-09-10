@@ -24,7 +24,7 @@ class SerialDarwinBoardTest(unittest.TestCase):
     def test_identifies_configures_and_measures(self) -> None:
         transport = FakeTransport(
             {
-                "ID?": "ID DARWIN_ESP32_1 FW=0.3.0",
+                "ID?": "ID DARWIN_ESP32_1 FW=0.6.0",
                 "SET R=2 C=0x15": "OK",
                 "SWEEP 100 10000 3": "SWEEP_DB -0.01,-3.02,-20.04",
             }
@@ -40,10 +40,27 @@ class SerialDarwinBoardTest(unittest.TestCase):
         self.assertEqual(board.board_id, "DARWIN_ESP32_1")
         self.assertEqual(board.measurement_count, 1)
 
+    def test_addresses_the_full_eight_by_eight_switch_fabric(self) -> None:
+        transport = FakeTransport(
+            {
+                "ID?": "ID DARWIN_ESP32_1 FW=0.6.0",
+                "SET R=7 C=0xFF": "OK",
+                "SWEEP 100 10000 3": "SWEEP_DB -0.01,-3.02,-20.04",
+            }
+        )
+        board = SerialDarwinBoard(transport)
+
+        board.measure_response_db(
+            Configuration(7, 0xFF),
+            np.geomspace(100.0, 10_000.0, 3),
+        )
+
+        self.assertIn("SET R=7 C=0xFF", transport.commands)
+
     def test_parses_status(self) -> None:
         transport = FakeTransport(
             {
-                "ID?": "ID DARWIN_ESP32_1 FW=0.3.0",
+                "ID?": "ID DARWIN_ESP32_1 FW=0.6.0",
                 "STATUS?": (
                     "STATUS MODE=STEP_MODEL VCC_MV=3294 TEMP_C=31.5 "
                     "FC_HZ=1198.4 FIT_R2=0.9972"
@@ -62,7 +79,7 @@ class SerialDarwinBoardTest(unittest.TestCase):
 
     def test_rejects_non_geometric_sweep(self) -> None:
         transport = FakeTransport(
-            {"ID?": "ID DARWIN_ESP32_1 FW=0.3.0"}
+            {"ID?": "ID DARWIN_ESP32_1 FW=0.6.0"}
         )
         board = SerialDarwinBoard(transport)
 
@@ -75,7 +92,7 @@ class SerialDarwinBoardTest(unittest.TestCase):
     def test_surfaces_firmware_error(self) -> None:
         transport = FakeTransport(
             {
-                "ID?": "ID DARWIN_ESP32_1 FW=0.3.0",
+                "ID?": "ID DARWIN_ESP32_1 FW=0.6.0",
                 "SET R=0 C=0x01": "ERR SWITCH_BANK_OFFLINE",
             }
         )

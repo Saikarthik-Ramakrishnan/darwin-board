@@ -15,10 +15,7 @@ def describe_configuration(board: SimulatedDarwinBoard, configuration) -> dict:
     return {
         "resistor_index": configuration.resistor_index,
         "capacitor_mask": configuration.capacitor_mask,
-        "genotype": (
-            f"R{configuration.resistor_index + 1}:"
-            f"C{configuration.capacitor_mask:06b}"
-        ),
+        "genotype": board.design.genotype(configuration),
         "active_capacitors": list(
             configuration.active_capacitors(len(board.design.capacitor_farads))
         ),
@@ -33,7 +30,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
     board = SimulatedDarwinBoard(seed=7)
     controller = DarwinController(board, requested_cutoff_hz)
 
-    print("DARWIN BOARD - MILESTONE 0.5")
+    print("DARWIN BOARD - MILESTONE 0.6")
     print(f"Requested response: first-order low-pass at {requested_cutoff_hz:.0f} Hz")
     print()
 
@@ -52,6 +49,11 @@ def run_demo(trace_path: Path | None = None) -> dict:
     print(
         f"Response error={commissioned.best.response_error_db:.3f} dB "
         f"after {len(commissioned.evaluations)} experimental configurations"
+    )
+    print(
+        "Evolution: "
+        f"{len(commissioned.generations)} measured generations, "
+        f"{commissioned.generations[-1].diversity * 100.0:.0f}% final diversity"
     )
     print(
         "Pre-mortem: "
@@ -103,7 +105,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
         )
 
     trace = seal_payload({
-        "schema_version": "0.5",
+        "schema_version": "0.6",
         "requested_cutoff_hz": requested_cutoff_hz,
         "commissioned": {
             **original,
@@ -118,6 +120,13 @@ def run_demo(trace_path: Path | None = None) -> dict:
             ),
             "worst_preflight_error_db": (
                 resilience_plan.worst_fallback_error_db
+            ),
+        },
+        "evolution": {
+            "generation_count": len(commissioned.generations),
+            "final_diversity": commissioned.generations[-1].diversity,
+            "best_genotype": board.design.genotype(
+                commissioned.best.configuration
             ),
         },
         "fault": {
@@ -155,7 +164,7 @@ def run_demo(trace_path: Path | None = None) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run the Darwin Board milestone 0.5 demonstration"
+        description="Run the Darwin Board milestone 0.6 demonstration"
     )
     parser.add_argument(
         "--trace",

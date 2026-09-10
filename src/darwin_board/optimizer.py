@@ -6,6 +6,12 @@ from typing import Iterable
 import numpy as np
 
 from .board import DarwinBoard
+from .evolution import (
+    EvolutionCandidate,
+    EvolutionEngine,
+    EvolutionGeneration,
+    population_diversity,
+)
 from .model import Configuration, low_pass_response_db, target_response_db
 
 
@@ -25,10 +31,11 @@ class Evaluation:
 class TuningResult:
     best: Evaluation
     evaluations: tuple[Evaluation, ...]
+    generations: tuple[EvolutionGeneration, ...] = ()
 
 
 class BayesianTuner:
-    """Small Gaussian-process tuner for the discrete MVP component bank."""
+    """Physics-informed Bayesian evolution for a discrete component bank."""
 
     def __init__(
         self,
@@ -40,6 +47,10 @@ class BayesianTuner:
         observation_noise: float = 0.08,
         topology_weight: float = 0.12,
         kernel_scale_factors: tuple[float, ...] = (0.65, 1.0, 1.8),
+        population_size: int = 8,
+        offspring_batch_size: int = 4,
+        offspring_pool_size: int = 48,
+        immigrant_fraction: float = 0.15,
     ) -> None:
         if power_weight < 0.0:
             raise ValueError("Power weight cannot be negative")
@@ -55,6 +66,8 @@ class BayesianTuner:
             factor <= 0.0 for factor in kernel_scale_factors
         ):
             raise ValueError("Kernel scale factors must be positive")
+        if offspring_batch_size < 1:
+            raise ValueError("Offspring batch size must be positive")
         self._rng = np.random.default_rng(seed)
         self.power_weight = power_weight
         self.length_scale = length_scale
@@ -62,6 +75,13 @@ class BayesianTuner:
         self.observation_noise = observation_noise
         self.topology_weight = topology_weight
         self.kernel_scale_factors = tuple(kernel_scale_factors)
+        self.offspring_batch_size = offspring_batch_size
+        self._evolution = EvolutionEngine(
+            self._rng,
+            population_size=population_size,
+            offspring_pool_size=offspring_pool_size,
+            immigrant_fraction=immigrant_fraction,
+        )
 
     def tune(
         self,
@@ -131,45 +151,160 @@ class BayesianTuner:
                 )
             )
 
+        capacitor_count = len(board.design.capacitor_farads)
+        resistor_count = len(board.design.resistor_ohms)
+        measured_scores = {
+            item.configuration: item.score for item in evaluated
+        }
+        initial_survivors = self._evolution.survivors(measured_scores)
+        initial_best = min(evaluated, key=lambda item: item.score)
+        generations: list[EvolutionGeneration] = [
+            EvolutionGeneration(
+                index=0,
+                parents=(),
+                offspring=tuple(item.configuration for item in evaluated),
+                survivors=initial_survivors,
+                best_configuration=initial_best.configuration,
+                best_score=initial_best.score,
+                improvement=0.0,
+                diversity=population_diversity(
+                    initial_survivors,
+                    capacitor_count,
+                ),
+                mutation_events=0,
+                crossover_events=0,
+                immigrant_count=len(evaluated),
+            )
+        ]
+
         while len(evaluated) < budget:
-            measured_indices = np.array(
-                [
-                    candidate_indices_by_configuration[item.configuration]
-                    for item in evaluated
-                ],
-                dtype=int,
+            previous_best_score = min(item.score for item in evaluated)
+            batch = self._evolution.breed(
+                measured_scores=measured_scores,
+                unseen={candidates[index] for index in unseen},
+                resistor_count=resistor_count,
+                capacitor_count=capacitor_count,
             )
-            measured_scores = np.array([item.score for item in evaluated])
-            candidate_indices = np.array(sorted(unseen), dtype=int)
-            measured_residuals = (
-                measured_scores - nominal_scores[measured_indices]
+            candidate_origins = {
+                item.configuration: item for item in batch.candidates
+            }
+            nominal_best_index = min(
+                unseen,
+                key=lambda index: nominal_scores[index],
             )
-            residual_mean, standard_deviation = self._predict(
-                features[measured_indices],
-                measured_residuals,
-                features[candidate_indices],
+            nominal_best_configuration = candidates[nominal_best_index]
+            candidate_origins.setdefault(
+                nominal_best_configuration,
+                EvolutionCandidate(
+                    configuration=nominal_best_configuration,
+                    parents=(),
+                    mutation_count=0,
+                ),
             )
-            mean = nominal_scores[candidate_indices] + residual_mean
-            acquisition = mean - self.exploration * standard_deviation
-            selected_position = int(np.argmin(acquisition))
-            next_index = int(candidate_indices[selected_position])
-            unseen.remove(next_index)
-            evaluated.append(
-                self._evaluate(
+            selected_origins: list[EvolutionCandidate] = []
+            batch_measurements = min(
+                self.offspring_batch_size,
+                budget - len(evaluated),
+            )
+            for _ in range(batch_measurements):
+                available = tuple(
+                    item
+                    for item in candidate_origins.values()
+                    if candidate_indices_by_configuration[item.configuration]
+                    in unseen
+                )
+                if not available:
+                    break
+                measured_indices = np.array(
+                    [
+                        candidate_indices_by_configuration[item.configuration]
+                        for item in evaluated
+                    ],
+                    dtype=int,
+                )
+                measured_score_values = np.array(
+                    [item.score for item in evaluated]
+                )
+                pool_indices = np.array(
+                    [
+                        candidate_indices_by_configuration[item.configuration]
+                        for item in available
+                    ],
+                    dtype=int,
+                )
+                measured_residuals = (
+                    measured_score_values - nominal_scores[measured_indices]
+                )
+                residual_mean, standard_deviation = self._predict(
+                    features[measured_indices],
+                    measured_residuals,
+                    features[pool_indices],
+                )
+                mean = nominal_scores[pool_indices] + residual_mean
+                acquisition = mean - self.exploration * standard_deviation
+                selected_position = int(np.argmin(acquisition))
+                selected_origin = available[selected_position]
+                next_index = int(pool_indices[selected_position])
+                unseen.remove(next_index)
+                evaluation = self._evaluate(
                     board,
-                    candidates[next_index],
+                    selected_origin.configuration,
                     frequencies_hz,
                     target,
-                    selection_method="lower confidence bound",
+                    selection_method=(
+                        "evolutionary immigrant"
+                        if selected_origin.is_immigrant
+                        else "evolutionary offspring"
+                    ),
                     predicted_score=float(mean[selected_position]),
                     predicted_uncertainty=float(
                         standard_deviation[selected_position]
                     ),
                 )
+                evaluated.append(evaluation)
+                measured_scores[evaluation.configuration] = evaluation.score
+                selected_origins.append(selected_origin)
+
+            if not selected_origins:
+                raise RuntimeError("Evolution could not produce an unseen route")
+            survivors = self._evolution.survivors(measured_scores)
+            current_best = min(evaluated, key=lambda item: item.score)
+            generations.append(
+                EvolutionGeneration(
+                    index=len(generations),
+                    parents=batch.parents,
+                    offspring=tuple(
+                        item.configuration for item in selected_origins
+                    ),
+                    survivors=survivors,
+                    best_configuration=current_best.configuration,
+                    best_score=current_best.score,
+                    improvement=max(
+                        previous_best_score - current_best.score,
+                        0.0,
+                    ),
+                    diversity=population_diversity(
+                        survivors,
+                        capacitor_count,
+                    ),
+                    mutation_events=sum(
+                        item.mutation_count for item in selected_origins
+                    ),
+                    crossover_events=sum(
+                        bool(item.parents) for item in selected_origins
+                    ),
+                    immigrant_count=sum(
+                        item.is_immigrant for item in selected_origins
+                    ),
+                )
             )
 
         best = min(evaluated, key=lambda item: item.score)
-        return TuningResult(best=best, evaluations=tuple(evaluated))
+        return TuningResult(
+            best=best,
+            evaluations=tuple(evaluated),
+            generations=tuple(generations),
+        )
 
     def evaluate(
         self,

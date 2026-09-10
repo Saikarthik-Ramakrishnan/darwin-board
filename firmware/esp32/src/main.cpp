@@ -3,11 +3,15 @@
 
 namespace {
 
-constexpr char kFirmwareVersion[] = "0.3.0";
+constexpr char kFirmwareVersion[] = "0.6.0";
 constexpr uint8_t kDacPin = 25;
 constexpr uint8_t kAdcOutputPin = 34;
 constexpr uint8_t kResistorSelectPins[] = {21, 22, 23};
-constexpr uint8_t kCapacitorSwitchPins[] = {13, 14, 16, 17, 18, 19};
+constexpr uint8_t kCapacitorDataPin = 13;
+constexpr uint8_t kCapacitorClockPin = 14;
+constexpr uint8_t kCapacitorLatchPin = 16;
+constexpr uint8_t kResistorCount = 8;
+constexpr uint8_t kCapacitorCount = 8;
 constexpr uint8_t kDacLow = 48;
 constexpr uint8_t kDacHigh = 208;
 constexpr size_t kTransientPoints = 42;
@@ -66,7 +70,7 @@ uint32_t logarithmicDelay(size_t index) {
 }
 
 bool setConfiguration(uint8_t resistorIndex, uint8_t capacitorMask) {
-  if (resistorIndex >= 6 || capacitorMask == 0 || capacitorMask >= 64) {
+  if (resistorIndex >= kResistorCount || capacitorMask == 0) {
     return false;
   }
   for (size_t bit = 0; bit < 3; ++bit) {
@@ -74,11 +78,13 @@ bool setConfiguration(uint8_t resistorIndex, uint8_t capacitorMask) {
         kResistorSelectPins[bit],
         (resistorIndex & (1U << bit)) != 0 ? HIGH : LOW);
   }
-  for (size_t bit = 0; bit < 6; ++bit) {
-    digitalWrite(
-        kCapacitorSwitchPins[bit],
-        (capacitorMask & (1U << bit)) != 0 ? HIGH : LOW);
-  }
+  digitalWrite(kCapacitorLatchPin, LOW);
+  shiftOut(
+      kCapacitorDataPin,
+      kCapacitorClockPin,
+      MSBFIRST,
+      capacitorMask);
+  digitalWrite(kCapacitorLatchPin, HIGH);
   gResistorIndex = resistorIndex;
   gCapacitorMask = capacitorMask;
   delay(2);
@@ -249,7 +255,11 @@ void handleCommand(String command) {
           "SET R=%d C=%x",
           &resistorIndex,
           &capacitorMask) == 2) {
-    if (!setConfiguration(
+    if (resistorIndex < 0
+        || resistorIndex >= kResistorCount
+        || capacitorMask == 0
+        || capacitorMask >= (1U << kCapacitorCount)
+        || !setConfiguration(
             static_cast<uint8_t>(resistorIndex),
             static_cast<uint8_t>(capacitorMask))) {
       Serial.println("ERR INVALID_CONFIGURATION");
@@ -285,9 +295,9 @@ void setup() {
   for (const uint8_t pin : kResistorSelectPins) {
     pinMode(pin, OUTPUT);
   }
-  for (const uint8_t pin : kCapacitorSwitchPins) {
-    pinMode(pin, OUTPUT);
-  }
+  pinMode(kCapacitorDataPin, OUTPUT);
+  pinMode(kCapacitorClockPin, OUTPUT);
+  pinMode(kCapacitorLatchPin, OUTPUT);
   setConfiguration(0, 1);
   dacWrite(kDacPin, kDacLow);
 }
