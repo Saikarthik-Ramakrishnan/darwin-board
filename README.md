@@ -11,18 +11,7 @@ active circuit degrades.
 
 ## Architecture
 
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "20px"}}}%%
-flowchart LR
-    A[Set target] --> B[Rank genotypes]
-    B --> C[Configure ESP32]
-    C --> D[Measure response]
-    D --> E[Activate path]
-    E --> F[Monitor health]
-    D -->|Outside tolerance| B
-    F -->|Fault detected| G[Load backup]
-    G --> C
-```
+![Darwin Board architecture](docs/assets/architecture-flow.svg)
 
 ## How it works
 
