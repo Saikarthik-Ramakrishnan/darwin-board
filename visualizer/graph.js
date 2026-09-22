@@ -3,7 +3,7 @@
   const el = id => document.getElementById(`graph-${id}`);
   const svg = el("svg"), ns = "http://www.w3.org/2000/svg";
   let run, nodes = [], edges = [], lookup = new Map(), selected, layer;
-  let camera = {x:0, y:0, k:1}, drag = null;
+  let camera = {x:0, y:0, k:1}, drag = null, exporting = false;
   function shape(tag, attrs = {}, copy = "") {
     const item = document.createElementNS(ns, tag);
     Object.entries(attrs).forEach(([key, value]) => item.setAttribute(key, value));
@@ -44,7 +44,8 @@
   function positions() {
     nodes.forEach(n => {
       n.element.setAttribute("transform", `translate(${n.x},${n.y})`);
-      n.dot.setAttribute("r", (n.deployed ? 7 : n.archived ? 5 : 3.5) / camera.k);
+      const degree = edges.filter(e => e.source === n.id || e.target === n.id).length;
+      n.dot.setAttribute("r", (3.5 + Math.min(4, Math.log2(1 + degree))) / camera.k);
       n.hit.setAttribute("r", 12 / camera.k);
       n.label.setAttribute("x", 11 / camera.k); n.label.setAttribute("y", -10 / camera.k);
       n.label.style.fontSize = `${12 / camera.k}px`;
@@ -58,7 +59,8 @@
   }
   function fit() {
     if (!nodes.length) return;
-    const xs = nodes.map(n => n.x), ys = nodes.map(n => n.y);
+    const visible = nodes.filter(n => !n.element.classList.contains("filtered"));
+    const xs = visible.map(n => n.x), ys = visible.map(n => n.y);
     const left = Math.min(...xs), right = Math.max(...xs), top = Math.min(...ys), bottom = Math.max(...ys);
     const width = svg.clientWidth || 900, height = svg.clientHeight || 560;
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -76,23 +78,27 @@
     drawing.append(shape("text", {x:238, y:102, fill:"var(--blue)", "font-size":14}, `${Number(cap.toFixed(2))} nF`));
     return cap;
   }
-  function select(id) {
-    const n = lookup.get(id); if (!n) return;
-    selected = id; el("picker").value = id;
+  function highlight(id) {
     const connected = new Set([id]);
     edges.forEach(e => { if (e.source === id || e.target === id) { connected.add(e.source); connected.add(e.target); } });
     nodes.forEach(item => {
       item.element.classList.toggle("selected", item.id === id);
       item.element.classList.toggle("dim", !connected.has(item.id));
+      item.element.classList.toggle("filtered", el("local").checked && !connected.has(item.id));
       item.element.setAttribute("tabindex", item.id === id ? "0" : "-1");
       item.label.textContent = item.id === id ? item.id : "";
     });
     edges.forEach(e => {
       const related = e.source === id || e.target === id;
       e.element.classList.toggle("related", related); e.element.classList.toggle("dim", !related);
+      e.element.classList.toggle("filtered", el("local").checked && !related);
     });
+  }
+  function select(id) {
+    const n = lookup.get(id); if (!n) return;
+    selected = id; el("picker").value = id; highlight(id);
     el("name").textContent = id;
-    el("role").textContent = n.deployed ? "Deployed during the trial" : n.archived ? "Kept in the circuit archive" : "Measured; outside the final archive";
+    el("role").textContent = n.deployed ? "Deployed during the trial." : n.archived ? "Kept in the circuit archive." : "Measured; outside the final archive.";
     const cap = circuit(n), mask = n.configuration.capacitor_mask;
     const values = [
       ["Training stress score", `${n.score_db.toFixed(3)} dB`], ["Generation", n.generation],
@@ -129,6 +135,9 @@
     nodes = run.circuit_graph.nodes.map((n, i) => ({...n, index:i}));
     edges = run.circuit_graph.edges.map(e => ({...e}));
     lookup = new Map(nodes.map(n => [n.id, n]));
+    el("local").checked = false;
+    document.getElementById("obsidian-status").textContent = "";
+    document.getElementById("obsidian-open").hidden = true;
     el("empty").hidden = true; el("results").hidden = false;
     const recoveries = edges.filter(e => e.kind === "recovery").length;
     el("count").textContent = `${nodes.length} measured circuits, ${recoveries} recovery ${recoveries === 1 ? "path" : "paths"}`;
@@ -143,9 +152,11 @@
       n.label = shape("text", {x:12, y:-12}); n.element.append(n.label);
       n.element.append(shape("title", {}, `${n.id}: ${n.score_db.toFixed(3)} dB`));
       n.element.addEventListener("keydown", event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); select(n.id); } });
+      n.element.addEventListener("pointerenter", () => { if (!drag && !el("local").checked) highlight(n.id); });
+      n.element.addEventListener("pointerleave", () => { if (!drag && selected) highlight(selected); });
       layer.append(n.element);
     });
-    fit(); select(run.mission[0].before_genotype);
+    select(run.mission[0].before_genotype); fit();
   }
   function pointer(event) {
     const point = svg.createSVGPoint(); point.x = event.clientX; point.y = event.clientY;
@@ -175,6 +186,21 @@
     camera.k = scale; positions();
   }, {passive:false});
   el("fit").addEventListener("click", fit);
+  el("local").addEventListener("change", () => { if (selected) { highlight(selected); fit(); } });
+  svg.setAttribute("tabindex", "0");
+  svg.addEventListener("keydown", event => {
+    if (!run || !["+", "=", "-", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    event.preventDefault();
+    if (["+", "=", "-"].includes(event.key)) {
+      const old = camera.k, next = Math.max(.2, Math.min(5, old * (event.key === "-" ? .8 : 1.25)));
+      camera.x = svg.clientWidth / 2 - (svg.clientWidth / 2 - camera.x) * next / old;
+      camera.y = svg.clientHeight / 2 - (svg.clientHeight / 2 - camera.y) * next / old; camera.k = next;
+    } else {
+      camera.x += event.key === "ArrowLeft" ? 40 : event.key === "ArrowRight" ? -40 : 0;
+      camera.y += event.key === "ArrowUp" ? 40 : event.key === "ArrowDown" ? -40 : 0;
+    }
+    positions();
+  });
   new ResizeObserver(() => { if (svg.clientWidth > 0 && run) fit(); }).observe(svg);
   el("picker").addEventListener("change", () => select(el("picker").value));
   el("build").addEventListener("click", () => window.DarwinArena.run());
@@ -185,4 +211,41 @@
     el("status").textContent = event.detail.message;
   });
   document.addEventListener("darwin:arena-ready", () => { el("build").disabled = false; });
+  document.addEventListener("darwin:arena-clear", () => {
+    run = null; nodes = []; edges = []; selected = null; svg.replaceChildren();
+    el("empty").hidden = false; el("results").hidden = true; el("status").textContent = "";
+  });
+  window.DarwinGraph = {
+    capture:() => ({selected, camera:{...camera}, local:el("local").checked,
+                   status:document.getElementById("obsidian-status").textContent,
+                   uri:document.getElementById("obsidian-open").getAttribute("href"), openHidden:document.getElementById("obsidian-open").hidden}),
+    restore:saved => {
+      if (run && saved.selected) { el("local").checked = saved.local; select(saved.selected); camera = saved.camera; positions(); }
+      document.getElementById("obsidian-status").textContent = saved.status;
+      const link = document.getElementById("obsidian-open"); link.hidden = saved.openHidden;
+      if (saved.uri) link.href = saved.uri; else link.removeAttribute("href");
+    }, busy:() => exporting
+  };
+  document.getElementById("obsidian-send").addEventListener("click", async () => {
+    if (!run || exporting) return;
+    const button = document.getElementById("obsidian-send"), status = document.getElementById("obsidian-status");
+    const exportedRun = run;
+    exporting = true; button.disabled = true; status.textContent = "Writing linked circuit notes…";
+    try {
+      const response = await fetch("/api/obsidian", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({run:exportedRun})});
+      if (response.ok && response.headers.get("Content-Type")?.includes("application/zip")) {
+        const url = URL.createObjectURL(await response.blob()), link = document.createElement("a");
+        link.href = url; link.download = `${exportedRun.evidence.run_id}-obsidian.zip`; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        status.textContent = "Notes downloaded. Unzip the Darwin Board folder inside your vault.";
+      } else {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Could not export this run.");
+        if (run !== exportedRun) return;
+        status.textContent = result.created ? `${result.note_count} notes added to ${result.vault}.` : "This run is already in your vault. Existing notes were preserved.";
+        const link = document.getElementById("obsidian-open"); link.href = result.uri; link.hidden = false;
+      }
+    } catch (error) { status.textContent = error.message; }
+    finally { exporting = false; button.disabled = false; }
+  });
 })();

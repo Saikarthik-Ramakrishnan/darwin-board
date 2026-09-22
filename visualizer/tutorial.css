@@ -1,0 +1,11 @@
+#tutorial-dialog { position:fixed; inset:auto 24px 24px auto; margin:0; width:365px; max-width:calc(100vw - 32px); padding:23px; border:1px solid var(--line-strong); border-radius:9px; background:var(--surface); color:var(--ink); box-shadow:0 12px 48px #0003; }
+#tutorial-dialog::backdrop { background:#00000012; }
+.tutorial-top, .tutorial-actions { display:flex; align-items:center; justify-content:space-between; gap:15px; }
+.tutorial-top { margin-bottom:15px; font-size:12px; color:var(--muted); }
+#tutorial-close { background:none; border:0; padding:0; height:auto; color:var(--muted); font-size:12px; }
+#tutorial-title { font-size:20px; font-weight:600; letter-spacing:-.02em; }
+#tutorial-copy { font-size:14px; line-height:1.7; color:var(--muted); margin:12px 0 22px; }
+#tutorial-error { color:var(--red); font-size:13px; }
+.tutorial-actions button { min-width:76px; }
+.tutorial-target { outline:3px solid var(--blue) !important; outline-offset:7px; border-radius:5px; }
+@media(max-width:600px) { #tutorial-dialog { inset:auto 16px 16px; width:auto; max-height:42vh; overflow:auto; padding:18px; } #tutorial-copy { margin-bottom:12px; } }

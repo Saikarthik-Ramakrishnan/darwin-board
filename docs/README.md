@@ -99,6 +99,7 @@ loads.
 - [`prior-art-and-direction.md`](prior-art-and-direction.md): existing solutions, selected direction, and evidence
 - [`validation-0.7.md`](validation-0.7.md): fresh-seed results and validation limits
 - [`interface.md`](interface.md): layout and interaction decisions
+- [`obsidian.md`](obsidian.md): linked circuit notes and native graph views
 - [`hardware-mvp.md`](hardware-mvp.md): physical prototype scope
 - [`linkedin-demo.md`](linkedin-demo.md): demonstration script
 - [`hackathon-submission.md`](hackathon-submission.md): submission notes

@@ -17,6 +17,8 @@ from .memory import ExperienceMemory
 from .model import Configuration, target_response_db
 from .optimizer import Evaluation, TuningResult
 from .resilience import ResiliencePlan
+from .obsidian import find_vault, notes_zip, write_vault
+from urllib.parse import urlparse
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -419,7 +421,10 @@ class VisualizerHandler(BaseHTTPRequestHandler):
     experience_memory = ExperienceMemory()
 
     def do_GET(self) -> None:
-        if self.path in {"/arena.js", "/arena.css", "/graph.js", "/graph.css", "/interface.css"}:
+        if self.path == "/docs/assets/darwin-board-logo-transparent.png":
+            self._send_bytes((PROJECT_ROOT / "docs/assets/darwin-board-logo-transparent.png").read_bytes(), "image/png")
+            return
+        if self.path in {"/arena.js", "/arena.css", "/graph.js", "/graph.css", "/interface.css", "/tutorial.js", "/tutorial.css"}:
             content_type = "text/javascript" if self.path.endswith(".js") else "text/css"
             self._send_bytes((PROJECT_ROOT / "visualizer" / self.path[1:]).read_bytes(), content_type + "; charset=utf-8")
             return
@@ -439,16 +444,36 @@ class VisualizerHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "not found"}, status=404)
 
     def do_POST(self) -> None:
-        if self.path not in {"/api/session", "/api/arena"}:
+        if self.path not in {"/api/session", "/api/arena", "/api/tutorial", "/api/obsidian"}:
             self._send_json({"error": "not found"}, status=404)
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            if not 0 <= length <= 8192:
+            if not 0 <= length <= (1_048_576 if self.path == "/api/obsidian" else 8192):
                 raise ValueError("Request is too large")
             request = json.loads(self.rfile.read(length) or b"{}")
             if not isinstance(request, dict):
                 raise ValueError("Request must be a JSON object")
+            if self.path == "/api/obsidian":
+                # Vault writes require a same-origin JSON request from the lab.
+                origin = urlparse(self.headers.get("Origin", ""))
+                if (self.headers.get("Content-Type", "").split(";")[0] != "application/json"
+                        or origin.scheme != "http" or origin.hostname not in {"127.0.0.1", "localhost", "::1"}
+                        or origin.port != self.server.server_port):
+                    self._send_json({"error": "Export must be requested from the local dashboard"}, status=403)
+                    return
+                run = request.get("run")
+                vault = find_vault()
+                if vault is None:
+                    self._send_bytes(notes_zip(run), "application/zip")
+                else:
+                    self._send_json(write_vault(run, vault))
+                return
+            if self.path == "/api/tutorial":
+                self._send_json({"lab": build_session(cutoff_hz=1200, budget=24, seed=7,
+                                                       fault_kind="open_capacitor", memory=ExperienceMemory()),
+                                 "arena": build_arena(cutoff_hz=1200, seed=7, budget=96)})
+                return
             if self.path == "/api/arena":
                 payload = build_arena(
                     cutoff_hz=float(request.get("cutoff_hz", 1200)),
@@ -467,8 +492,11 @@ class VisualizerHandler(BaseHTTPRequestHandler):
                 health_sweeps=int(request.get("health_sweeps", 3)),
                 memory=self.experience_memory,
             )
-        except (TypeError, ValueError, OverflowError, json.JSONDecodeError) as error:
+        except (TypeError, ValueError, KeyError, OverflowError, json.JSONDecodeError) as error:
             self._send_json({"error": str(error)}, status=400)
+            return
+        except OSError:
+            self._send_json({"error": "Could not write to the Obsidian vault. Check folder permissions."}, status=409)
             return
         self._send_json(payload)
 

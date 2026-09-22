@@ -13,6 +13,11 @@
 .graph-edge.related { stroke:var(--graph-kept); stroke-width:1.7; }
 .graph-edge.recovery.related { stroke:var(--blue); }
 .graph-node { cursor:pointer; }
+.graph-node.filtered, .graph-edge.filtered { display:none; }
+.graph-toolbar .graph-local-label { gap:6px; }
+.graph-local-label input { accent-color:var(--graph-kept); }
+.obsidian-open { display:inline-block; color:var(--blue); font-size:13px; margin:0 0 16px; }
+#obsidian-status:empty { display:none; }
 .graph-node circle { fill:var(--graph-node); stroke:var(--page); stroke-width:2; vector-effect:non-scaling-stroke; }
 .graph-node.archived circle { fill:var(--graph-kept); }
 .graph-node.deployed circle { fill:var(--blue); }

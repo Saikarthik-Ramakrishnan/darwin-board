@@ -4,6 +4,8 @@ The arena evolves an archive of RC circuit genotypes under environmental
 stress, freezes it, and tests adaptation on a fresh simulated board. Open the
 **Arena** tab in the lab, choose a target, and select **Run trial**. The seed,
 route budget, and JSON export are under **Options**.
+The header's **Walkthrough** explains the lab, replay, arena, and map through
+a separate simulation. Your previous run returns when you finish or close it.
 
 ## What to inspect
 
@@ -16,6 +18,8 @@ route budget, and JSON export are under **Options**.
   error. Dashed edges show confirmed recovery switches. **View in replay**
   opens the selected circuit's first deployment step.
 - **Export run** saves a sealed JSON record, including every graph edge.
+- **Send to Obsidian** exports linked circuit notes into a dedicated vault
+  folder, or downloads them when no vault is found. See the [Obsidian guide](obsidian.md).
 
 The graph has no invented similarity links. A coloured archive node means
 the circuit won its resistor/capacitor-count niche; it does not guarantee

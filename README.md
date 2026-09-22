@@ -29,9 +29,10 @@ PYTHONPATH=src python3 -m darwin_board.visualizer_server
 ```
 
 Open [http://127.0.0.1:8765](http://127.0.0.1:8765) and select **Run cycle**.
+**Walkthrough** runs a guided simulation across all four views.
 
 The **Arena** tests adaptation on unseen simulated boards. **Circuit map**
-shows measured ancestry and recovery paths in an interactive graph.
+shows measured ancestry and recovery paths, with [linked notes for Obsidian](docs/obsidian.md).
 See the [experiment guide](docs/milestone-0.7.md).
 
 ## ESP32

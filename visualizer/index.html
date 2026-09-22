@@ -1191,15 +1191,17 @@
   <link rel="stylesheet" href="arena.css">
   <link rel="stylesheet" href="interface.css">
   <link rel="stylesheet" href="graph.css">
+  <link rel="stylesheet" href="tutorial.css">
 </head>
 <body>
   <div class="shell">
     <header class="topbar">
+      <button id="tutorial-start" class="tutorial-start" type="button">Walkthrough</button>
       <div class="brand">
-        <div class="mark" aria-hidden="true">DB</div>
+        <svg class="brand-logo" viewBox="240 50 465 485" role="img" aria-label="Darwin Board logo"><image href="../docs/assets/darwin-board-logo-transparent.png" width="910" height="728" /></svg>
         <div>
           <div class="brand-name">Darwin Board</div>
-        <div class="brand-subtitle">Circuits that adapt</div>
+        <div class="brand-subtitle">Circuits that adapt.</div>
         </div>
       </div>
       <div class="topbar-meta">
@@ -1300,7 +1302,7 @@
             <div class="section-head">
               <div>
                 <h1 id="response-title">Frequency response</h1>
-                <p class="section-note">Gain across the measured frequency range</p>
+                <p class="section-note">Gain across the measured frequency range.</p>
               </div>
               <div class="legend" aria-label="Chart legend">
                 <span class="legend-item"><span class="legend-line target"></span>Target</span>
@@ -1322,7 +1324,7 @@
             <div class="section-head">
               <div>
                 <h2 id="search-title">Search observations</h2>
-                <p class="section-note">Search measurements and pre-mortem qualification</p>
+                <p class="section-note">Search measurements and pre-mortem qualification.</p>
               </div>
               <div id="best-observation" class="section-note">No measurements</div>
             </div>
@@ -1333,7 +1335,7 @@
             <div class="section-head">
               <div>
                 <h2 id="evolution-title">Evolution lineage</h2>
-                <p class="section-note">Measured changes across generations</p>
+                <p class="section-note">Measured changes across generations.</p>
               </div>
               <div id="evolution-summary" class="section-note">No generations</div>
             </div>
@@ -1368,7 +1370,7 @@
             <div class="section-head">
               <div>
                 <h2 id="circuit-title">Active circuit</h2>
-                <p class="section-note">Selected component path</p>
+                <p class="section-note">Selected component path.</p>
               </div>
             </div>
 
@@ -1437,7 +1439,7 @@
             <div class="section-head">
               <div>
                 <h2 id="reserve-title">Failure pre-mortem</h2>
-                <p class="section-note">Measured routes reserved before activation</p>
+                <p class="section-note">Measured routes reserved before activation.</p>
               </div>
               <div id="reserve-coverage" class="section-note">No plan</div>
             </div>
@@ -1459,7 +1461,7 @@
         <div class="sequence-head">
           <div>
             <h1>Run sequence</h1>
-            <p class="section-note">Follow the winning circuit through search, fault, and recovery</p>
+            <p class="section-note">Follow the winning circuit through search, fault, and recovery.</p>
           </div>
           <div id="sequence-summary" class="sequence-summary">Run a cycle to build the sequence</div>
         </div>
@@ -1559,10 +1561,11 @@
         </div>
       </section>
       <section id="graph-panel" class="view-panel" role="tabpanel" aria-labelledby="graph-tab" hidden>
-        <div class="sequence-head"><div><h1>Circuit map</h1><p class="section-note">Trace a circuit's ancestry and the routes that kept it running.</p></div><span class="section-note">Obsidian-style graph</span></div>
+        <div class="sequence-head"><div><h1>Circuit map</h1><p class="section-note">Trace a circuit's ancestry and the routes that kept it running.</p></div><span class="section-note">Linked circuit notes.</span></div>
         <div id="graph-empty" class="graph-empty"><p>Every measured circuit becomes a node.<br>Run an arena trial to see how they connect.</p><button id="graph-build" class="primary" type="button">Build map</button><p id="graph-status" class="section-note" role="status"></p></div>
         <div id="graph-results" hidden>
-          <div class="graph-toolbar"><label for="graph-picker">Circuit <select id="graph-picker"></select></label><button id="graph-fit" type="button">Fit map</button><span id="graph-count" class="section-note"></span></div>
+          <div class="graph-toolbar"><label for="graph-picker">Circuit <select id="graph-picker"></select></label><button id="graph-fit" type="button">Fit map</button><label class="graph-local-label"><input id="graph-local" type="checkbox"> Local graph</label><button id="obsidian-send" type="button">Send to Obsidian</button><span id="graph-count" class="section-note"></span></div>
+          <p id="obsidian-status" class="section-note" role="status"></p><a id="obsidian-open" class="obsidian-open" hidden>Open run in Obsidian</a>
           <div class="graph-layout">
             <div class="graph-canvas"><svg id="graph-svg" viewBox="0 0 900 620" role="group" aria-label="Circuit ancestry map. Use the circuit picker or select a node to inspect its connections."></svg><p class="graph-hint">Drag to pan. Scroll to zoom.</p><div class="graph-legend"><span class="graph-key measured">Measured</span><span class="graph-key archived">Kept</span><span class="graph-key deployed">Deployed</span><span class="graph-key recovery">Recovery</span></div></div>
             <aside class="graph-inspector" aria-live="polite"><h2 id="graph-name"></h2><p id="graph-role" class="section-note"></p><svg id="graph-circuit" viewBox="0 0 320 150" role="img" aria-label="Selected circuit components"></svg><dl id="graph-values"></dl><div id="graph-links"></div></aside>
@@ -1572,6 +1575,14 @@
       </section>
     </main>
   </div>
+
+  <dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-copy">
+    <div class="tutorial-top"><span id="tutorial-progress">Walkthrough</span><button id="tutorial-close" type="button" aria-label="Close walkthrough">Close</button></div>
+    <h2 id="tutorial-title">Preparing a simulation</h2>
+    <p id="tutorial-copy" aria-live="polite">Your current run will be restored when you leave.</p>
+    <p id="tutorial-error" role="alert" hidden></p>
+    <div class="tutorial-actions"><button id="tutorial-back" type="button">Back</button><button id="tutorial-next" class="primary" type="button">Next</button></div>
+  </dialog>
 
   <script>
     const state = {
@@ -2759,8 +2770,29 @@
     setTheme(document.documentElement.dataset.theme);
     setView(state.view);
     render();
+    window.DarwinLab = {
+      capture: () => ({state:{...state}, cutoff:elements.cutoff.value, budget:elements.budget.value, fault:elements.faultType.value}),
+      busy: () => state.loading,
+      load: session => {
+        state.session = session; state.error = null; state.stage = "commissioned";
+        state.selectedGeneration = null; state.sequenceSelection = null;
+        elements.cutoff.value = session.meta.cutoff_hz;
+        elements.cutoffValue.value = formatFrequency(session.meta.cutoff_hz);
+        elements.budget.value = session.meta.budget; elements.faultType.value = "open_capacitor";
+        setLoading(false); render();
+      },
+      stage: value => { state.stage = value; setLoading(false); render(); },
+      view:setView,
+      restore:saved => {
+        Object.assign(state, saved.state); elements.cutoff.value = saved.cutoff;
+        elements.cutoffValue.value = formatFrequency(Number(saved.cutoff));
+        elements.budget.value = saved.budget; elements.faultType.value = saved.fault;
+        setLoading(false); setView(state.view); render();
+      }
+    };
   </script>
   <script src="arena.js"></script>
   <script src="graph.js"></script>
+  <script src="tutorial.js"></script>
 </body>
 </html>

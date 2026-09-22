@@ -164,6 +164,23 @@
     if (!run) return;
     stop(); step = Math.max(0, Math.min(run.mission.length - 1, index)); renderStep();
     document.getElementById("arena-tab").click(); el("step").focus();
+  }, busy:() => el("run").disabled,
+  capture:() => ({run, step, generation:el("generation").value, cutoff:el("cutoff").value, seed:el("seed").value, budget:el("budget").value}),
+  load:data => {
+    stop(); run = data; render(); el("export").disabled = false;
+    el("cutoff").value = data.meta.cutoff_hz; el("seed").value = data.meta.seed; el("budget").value = data.meta.route_budget;
+    document.dispatchEvent(new CustomEvent("darwin:arena", {detail:run}));
+  }, restore:saved => {
+    stop(); run = saved.run; el("cutoff").value = saved.cutoff; el("seed").value = saved.seed; el("budget").value = saved.budget;
+    if (run) {
+      render(); step = saved.step; renderStep(); el("export").disabled = false;
+      el("generation").value = saved.generation; renderGeneration();
+      document.dispatchEvent(new CustomEvent("darwin:arena", {detail:run}));
+    } else {
+      el("results").hidden = true; el("empty").hidden = false; el("export").disabled = true;
+      text("status", "The population learns on two boards, then faces conditions it has never seen.");
+      document.dispatchEvent(new CustomEvent("darwin:arena-clear"));
+    }
   }};
   el("step").addEventListener("input", () => { if (run) { stop(); step = Number(el("step").value); renderStep(); } });
   el("generation").addEventListener("input", () => { if (run) renderGeneration(); });
