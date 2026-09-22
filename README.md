@@ -28,8 +28,11 @@ python3 -m pip install -e .
 PYTHONPATH=src python3 -m darwin_board.visualizer_server
 ```
 
-Open [http://127.0.0.1:8765](http://127.0.0.1:8765) and select **Run autonomous
-cycle**.
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765) and select **Run cycle**.
+
+The **Arena** tests adaptation on unseen simulated boards. **Circuit map**
+shows measured ancestry and recovery paths in an interactive graph.
+See the [experiment guide](docs/milestone-0.7.md).
 
 ## ESP32
 

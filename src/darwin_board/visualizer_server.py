@@ -10,6 +10,7 @@ from typing import Any
 import numpy as np
 
 from .board import SimulatedDarwinBoard
+from .arena import build_arena
 from .controller import DarwinController
 from .evidence import seal_payload
 from .memory import ExperienceMemory
@@ -414,10 +415,14 @@ def build_session(
 
 
 class VisualizerHandler(BaseHTTPRequestHandler):
-    server_version = "DarwinBoard/0.6"
+    server_version = "DarwinBoard/0.7"
     experience_memory = ExperienceMemory()
 
     def do_GET(self) -> None:
+        if self.path in {"/arena.js", "/arena.css", "/graph.js", "/graph.css", "/interface.css"}:
+            content_type = "text/javascript" if self.path.endswith(".js") else "text/css"
+            self._send_bytes((PROJECT_ROOT / "visualizer" / self.path[1:]).read_bytes(), content_type + "; charset=utf-8")
+            return
         if self.path in {"/", "/index.html"}:
             self._send_bytes(
                 INDEX_PATH.read_bytes(),
@@ -434,12 +439,24 @@ class VisualizerHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "not found"}, status=404)
 
     def do_POST(self) -> None:
-        if self.path != "/api/session":
+        if self.path not in {"/api/session", "/api/arena"}:
             self._send_json({"error": "not found"}, status=404)
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
+            if not 0 <= length <= 8192:
+                raise ValueError("Request is too large")
             request = json.loads(self.rfile.read(length) or b"{}")
+            if not isinstance(request, dict):
+                raise ValueError("Request must be a JSON object")
+            if self.path == "/api/arena":
+                payload = build_arena(
+                    cutoff_hz=float(request.get("cutoff_hz", 1200)),
+                    seed=request.get("seed", 7),
+                    budget=request.get("budget", 96),
+                )
+                self._send_json(payload)
+                return
             payload = build_session(
                 cutoff_hz=float(request.get("cutoff_hz", 1_200.0)),
                 budget=int(request.get("budget", 24)),
@@ -450,7 +467,7 @@ class VisualizerHandler(BaseHTTPRequestHandler):
                 health_sweeps=int(request.get("health_sweeps", 3)),
                 memory=self.experience_memory,
             )
-        except (TypeError, ValueError, json.JSONDecodeError) as error:
+        except (TypeError, ValueError, OverflowError, json.JSONDecodeError) as error:
             self._send_json({"error": str(error)}, status=400)
             return
         self._send_json(payload)

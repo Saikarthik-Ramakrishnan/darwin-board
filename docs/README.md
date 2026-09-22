@@ -16,7 +16,18 @@ measurement, choice, fault, and recovery.
 
 ## Current status
 
-Version 0.6 is ready for breadboard validation. It includes:
+Version 0.7 adds an environmental adaptation arena to the existing lab.
+It includes:
+
+- a loaded RC twin with temperature, wear, parasitics, and compound faults
+- stress-selected circuit families with recorded ancestry
+- frozen-archive trials on unseen component profiles
+- nominal, random-search, and score-ranked-reserve comparisons
+- an interactive circuit map with measured ancestry and recovery paths
+
+See the [arena guide](milestone-0.7.md) and
+[prior-art review with benchmark results](prior-art-and-direction.md).
+The existing controller and ESP32 path also include:
 
 - a bijective catalog of 2,040 hardware genotypes
 - measured evolutionary generations with selection, crossover, and mutation
@@ -27,7 +38,7 @@ Version 0.6 is ready for breadboard validation. It includes:
 - SHA-256 sealed experiment traces
 - a USB serial adapter and ESP32 firmware
 
-The simulation benchmark covers 90 runs across three targets, ten component
+The original recovery benchmark below covers 90 runs across three targets, ten component
 tolerance profiles, and three fault types.
 
 | Metric | Result |
@@ -84,6 +95,10 @@ loads.
 - [`serial-protocol.md`](serial-protocol.md): ESP32 commands
 - [`milestone-0.5.md`](milestone-0.5.md): recovery method and proof plan
 - [`milestone-0.6.md`](milestone-0.6.md): evolutionary search and expanded fabric
+- [`milestone-0.7.md`](milestone-0.7.md): environmental adaptation arena
+- [`prior-art-and-direction.md`](prior-art-and-direction.md): existing solutions, selected direction, and evidence
+- [`validation-0.7.md`](validation-0.7.md): fresh-seed results and validation limits
+- [`interface.md`](interface.md): layout and interaction decisions
 - [`hardware-mvp.md`](hardware-mvp.md): physical prototype scope
 - [`linkedin-demo.md`](linkedin-demo.md): demonstration script
 - [`hackathon-submission.md`](hackathon-submission.md): submission notes

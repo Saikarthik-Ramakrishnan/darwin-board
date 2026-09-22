@@ -164,7 +164,16 @@ search measurements.
 
 ## Module boundaries
 
+The adaptation arena is a separate digital-twin experiment. It trains a
+diverse archive across environmental conditions, then freezes that archive
+before running independent static and sequential trials. It uses the same
+configuration encoding and evolutionary operators as the original lab.
+The existing ESP32 control path continues to use the original tuning and
+recovery controller. [Arena protocol](milestone-0.7.md).
+
 - `model.py` defines the circuit space and ideal responses.
+- `environment.py` evaluates the loaded small-signal RC network under stress.
+- `arena.py` evolves circuit niches, applies bounded interventions, and runs holdout comparisons.
 - `board.py` provides the simulator and common board contract.
 - `optimizer.py` selects experiments and records decision evidence.
 - `memory.py` stores and ranks prior successful configurations.

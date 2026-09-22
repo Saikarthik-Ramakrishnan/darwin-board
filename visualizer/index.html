@@ -1188,6 +1188,9 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="arena.css">
+  <link rel="stylesheet" href="interface.css">
+  <link rel="stylesheet" href="graph.css">
 </head>
 <body>
   <div class="shell">
@@ -1196,11 +1199,11 @@
         <div class="mark" aria-hidden="true">DB</div>
         <div>
           <div class="brand-name">Darwin Board</div>
-        <div class="brand-subtitle">Evolutionary analog systems lab</div>
+        <div class="brand-subtitle">Circuits that adapt</div>
         </div>
       </div>
       <div class="topbar-meta">
-        <div class="version">DIGITAL TWIN / M0.6</div>
+        <div class="version">Digital twin</div>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">
           <span class="theme-icon" aria-hidden="true"></span>
           <span id="theme-label" class="theme-label">Dark mode</span>
@@ -1224,7 +1227,9 @@
         role="tab"
         aria-selected="false"
         aria-controls="sequence-panel"
-      >Run sequence</button>
+      >Replay</button>
+      <button id="arena-tab" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="arena-panel">Arena</button>
+      <button id="graph-tab" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="graph-panel">Circuit map</button>
     </nav>
 
     <main>
@@ -1238,6 +1243,10 @@
           <input id="cutoff" type="range" min="300" max="5000" step="50" value="1200">
         </label>
 
+        <button id="autopilot" class="primary" type="button">Run cycle</button>
+        <details class="experiment-options">
+          <summary>Options</summary>
+          <div class="options-content">
         <label class="field" for="budget">
           <span class="field-head">Search budget</span>
           <select id="budget">
@@ -1258,12 +1267,13 @@
         </label>
 
         <div class="actions">
-          <button id="autopilot" class="primary" type="button">Run autonomous cycle</button>
           <button id="tune" type="button">Tune only</button>
           <button id="fault" class="danger" type="button" disabled>Inject fault</button>
           <button id="recover" type="button" disabled>Recover</button>
-          <button id="export" type="button" disabled>Export proof</button>
+          <button id="export" type="button" disabled>Export run</button>
         </div>
+          </div>
+        </details>
       </section>
 
       <section class="status-strip" aria-label="Current circuit status" aria-live="polite">
@@ -1281,14 +1291,6 @@
         <div class="status-block">
           <div class="status-label">Response error</div>
           <div id="response-error" class="status-value">--</div>
-        </div>
-        <div class="status-block">
-          <div class="status-label">Measurements</div>
-          <div id="measurement-count" class="status-value">0</div>
-        </div>
-        <div class="status-block">
-          <div class="status-label">Evidence</div>
-          <div id="evidence-value" class="status-value">--</div>
         </div>
       </section>
 
@@ -1313,6 +1315,9 @@
             </div>
           </section>
 
+          <details class="record-section">
+          <summary>Search record</summary>
+          <p class="section-note"><span id="measurement-count">0</span> measurements. <span id="evidence-value">No run loaded</span></p>
           <section class="search" aria-labelledby="search-title">
             <div class="section-head">
               <div>
@@ -1328,7 +1333,7 @@
             <div class="section-head">
               <div>
                 <h2 id="evolution-title">Evolution lineage</h2>
-                <p class="section-note">What changed, what was measured, and what was kept each round</p>
+                <p class="section-note">Measured changes across generations</p>
               </div>
               <div id="evolution-summary" class="section-note">No generations</div>
             </div>
@@ -1355,6 +1360,7 @@
               <div id="evolution-groups" class="lineage-groups"></div>
             </div>
           </section>
+          </details>
         </div>
 
         <aside class="side">
@@ -1383,6 +1389,7 @@
               <text id="schematic-fault" x="18" y="133"></text>
             </svg>
 
+            <details class="record-section"><summary>Circuit details</summary>
             <table class="component-table" aria-label="Circuit values">
               <tbody>
                 <tr>
@@ -1422,8 +1429,10 @@
             <p id="diagnostic-note" class="diagnostic-note">
               Health evidence appears after fault injection.
             </p>
+            </details>
           </section>
 
+          <details class="record-section"><summary>Recovery routes</summary>
           <section aria-labelledby="reserve-title">
             <div class="section-head">
               <div>
@@ -1434,6 +1443,7 @@
             </div>
             <div id="reserve-list" class="reserve-list" aria-live="polite"></div>
           </section>
+          </details>
 
         </aside>
       </div>
@@ -1496,6 +1506,68 @@
               </div>
             </dl>
           </div>
+        </div>
+      </section>
+      <section id="arena-panel" class="view-panel" role="tabpanel" aria-labelledby="arena-tab" hidden>
+        <div class="sequence-head">
+          <div><h1>A circuit under pressure</h1><p class="section-note">Watch it respond to heat, changing loads, and component failures.</p></div>
+          <span class="section-note">Simulation</span>
+        </div>
+        <div class="arena-controls">
+          <label>Target cutoff <input id="arena-cutoff" type="number" min="100" max="10000" value="1200" step="100"> Hz</label>
+          <button id="arena-run" class="primary" type="button">Run trial</button>
+          <details class="experiment-options"><summary>Options</summary><div class="options-content">
+          <label>Routes <select id="arena-budget"><option>48</option><option selected>96</option><option>192</option></select></label>
+          <label>Seed <input id="arena-seed" type="number" min="0" max="2147483647" value="7" step="1"></label>
+          <button id="arena-export" class="secondary" type="button" disabled>Export run</button>
+          </div></details>
+        </div>
+        <p id="arena-status" class="section-note" role="status">The population learns on two boards, then faces conditions it has never seen.</p>
+        <div id="arena-empty" class="arena-empty"><span class="empty-circuit" aria-hidden="true">Vin ── R ── Vout<br>　　　　 │<br>　　　　 C<br>　　　　 ⏚</span><p>Set a cutoff and run a trial.</p></div>
+        <div id="arena-results" hidden>
+          <section class="arena-replay">
+            <div class="replay-heading"><h2 id="arena-step-title">Arrival</h2><p id="arena-outcome" class="arena-outcome"></p></div>
+            <div class="arena-transport"><button id="arena-play" type="button">Play</button><input id="arena-step" type="range" min="0" max="7" value="0" aria-label="Deployment step"><output id="arena-step-number">1 / 8</output></div>
+            <div class="arena-grid">
+              <div><svg id="arena-circuit" viewBox="0 0 520 230" role="img" aria-label="Active resistor and capacitor path"></svg><p id="arena-step-detail" class="arena-detail"></p></div>
+              <div><svg id="arena-response" viewBox="0 0 520 230" role="img" aria-label="Target, adaptive circuit, and fixed circuit frequency responses"></svg><p class="arena-legend"><span>Target</span><span>Adaptive</span><span>Fixed</span></p></div>
+            </div>
+            <div class="replay-foot"><p id="arena-probes" class="section-note"></p><p id="arena-metrics" class="section-note"></p></div>
+          </section>
+          <details class="record-section"><summary>Experiment record</summary>
+          <div class="arena-grid arena-record-grid">
+            <section class="arena-card">
+              <h2>Circuit families</h2>
+              <p class="section-note">Resistor columns, capacitor-count rows. Each cell keeps its lowest-error circuit.</p>
+              <div id="arena-map" class="arena-map" aria-label="Circuit archive"></div>
+              <p id="arena-cell" class="arena-detail">Select a cell to inspect its genes and ancestry.</p>
+            </section>
+            <section class="arena-card">
+              <h2>Training progress</h2>
+              <svg id="arena-evolution-chart" viewBox="0 0 520 210" role="img" aria-label="Training stress score over generations"></svg>
+              <label class="arena-generation">Generation <input id="arena-generation" type="range" min="0" max="1" value="0"><output id="arena-generation-label">0</output></label>
+              <p id="arena-generation-detail" class="arena-detail"></p>
+            </section>
+          </div>
+          <section class="arena-card">
+            <h2>Unseen-board comparison</h2>
+            <p class="section-note">36 cases across three fresh component profiles. These results never enter selection. Lower error is better; passing means at most 0.5 dB RMS error.</p>
+            <div class="arena-table-wrap"><table class="component-table"><thead><tr><th>Selection method</th><th>Mean error</th><th>95th percentile</th><th>Pass rate</th><th>Training sweeps</th></tr></thead><tbody id="arena-comparison"></tbody></table></div>
+            <p id="arena-comparison-note" class="arena-detail"></p>
+          </section>
+          </details>
+        </div>
+      </section>
+      <section id="graph-panel" class="view-panel" role="tabpanel" aria-labelledby="graph-tab" hidden>
+        <div class="sequence-head"><div><h1>Circuit map</h1><p class="section-note">Trace a circuit's ancestry and the routes that kept it running.</p></div><span class="section-note">Obsidian-style graph</span></div>
+        <div id="graph-empty" class="graph-empty"><p>Every measured circuit becomes a node.<br>Run an arena trial to see how they connect.</p><button id="graph-build" class="primary" type="button">Build map</button><p id="graph-status" class="section-note" role="status"></p></div>
+        <div id="graph-results" hidden>
+          <div class="graph-toolbar"><label for="graph-picker">Circuit <select id="graph-picker"></select></label><button id="graph-fit" type="button">Fit map</button><span id="graph-count" class="section-note"></span></div>
+          <div class="graph-layout">
+            <div class="graph-canvas"><svg id="graph-svg" viewBox="0 0 900 620" role="group" aria-label="Circuit ancestry map. Use the circuit picker or select a node to inspect its connections."></svg><p class="graph-hint">Drag to pan. Scroll to zoom.</p><div class="graph-legend"><span class="graph-key measured">Measured</span><span class="graph-key archived">Kept</span><span class="graph-key deployed">Deployed</span><span class="graph-key recovery">Recovery</span></div></div>
+            <aside class="graph-inspector" aria-live="polite"><h2 id="graph-name"></h2><p id="graph-role" class="section-note"></p><svg id="graph-circuit" viewBox="0 0 320 150" role="img" aria-label="Selected circuit components"></svg><dl id="graph-values"></dl><div id="graph-links"></div></aside>
+          </div>
+          <p class="graph-note section-note">Lines follow recorded parentage. Dashed paths show confirmed switches during the arena replay. Training error is a simulated stress score.</p>
         </div>
       </section>
     </main>
@@ -1598,13 +1670,15 @@
     }
 
     function setView(view) {
-      state.view = view === "sequence" ? "sequence" : "lab";
-      const sequenceActive = state.view === "sequence";
-      elements.labTab.setAttribute("aria-selected", String(!sequenceActive));
-      elements.sequenceTab.setAttribute("aria-selected", String(sequenceActive));
-      elements.labPanel.hidden = sequenceActive;
-      elements.sequencePanel.hidden = !sequenceActive;
-      if (sequenceActive) renderSequence();
+      state.view = ["lab", "sequence", "arena", "graph"].includes(view) ? view : "lab";
+      ["lab", "sequence", "arena", "graph"].forEach(name => {
+        const active = state.view === name;
+        const tab = document.getElementById(`${name}-tab`);
+        tab.setAttribute("aria-selected", String(active));
+        tab.tabIndex = active ? 0 : -1;
+        document.getElementById(`${name}-panel`).hidden = !active;
+      });
+      if (state.view === "sequence") renderSequence();
     }
 
     function formatFrequency(value) {
@@ -1642,7 +1716,7 @@
       elements.autopilot.textContent =
         loading && state.autoplay
           ? "Running cycle..."
-          : "Run autonomous cycle";
+          : "Run cycle";
       elements.tune.textContent =
         loading && !state.autoplay ? "Tuning..." : "Tune only";
       document.querySelector(".status-strip").classList.toggle("loading", loading);
@@ -2651,7 +2725,9 @@
     });
     elements.labTab.addEventListener("click", () => setView("lab"));
     elements.sequenceTab.addEventListener("click", () => setView("sequence"));
-    [elements.labTab, elements.sequenceTab].forEach((tab, index, tabs) => {
+    document.getElementById("arena-tab").addEventListener("click", () => setView("arena"));
+    document.getElementById("graph-tab").addEventListener("click", () => setView("graph"));
+    [elements.labTab, elements.sequenceTab, document.getElementById("arena-tab"), document.getElementById("graph-tab")].forEach((tab, index, tabs) => {
       tab.addEventListener("keydown", event => {
         if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
         event.preventDefault();
@@ -2684,5 +2760,7 @@
     setView(state.view);
     render();
   </script>
+  <script src="arena.js"></script>
+  <script src="graph.js"></script>
 </body>
 </html>

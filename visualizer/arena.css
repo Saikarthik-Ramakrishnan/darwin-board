@@ -1,0 +1,32 @@
+.arena-controls { display:flex; flex-wrap:wrap; align-items:center; gap:18px; padding:18px 0; border-bottom:1px solid var(--line); }
+.arena-controls label { display:flex; align-items:center; gap:9px; color:var(--muted); }
+.arena-controls input, .arena-controls select { width:96px; padding:8px; background:var(--surface); color:var(--ink); border:1px solid var(--line-strong); border-radius:4px; }
+.arena-controls select { width:76px; }
+.arena-metrics { display:grid; grid-template-columns:repeat(4, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin:24px 0; }
+.arena-metrics > div { padding:18px; background:var(--surface); }
+.arena-metrics strong { display:block; font:500 29px var(--numeric); margin-top:5px; font-variant-numeric:tabular-nums; }
+.arena-metrics span { color:var(--muted); font-size:12px; }
+.arena-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+.arena-card { border:1px solid var(--line); padding:22px; margin:0 0 22px; background:var(--surface); min-width:0; }
+.arena-card h2 { font-size:17px; margin:0 0 8px; }
+.arena-card svg { width:100%; height:auto; display:block; color:var(--ink); }
+.arena-map { display:grid; grid-template-columns:24px repeat(8, 1fr); gap:5px; margin:18px 0; }
+.arena-map-label { text-align:center; font-size:11px; color:var(--muted); align-self:center; }
+.arena-niche { min-height:31px; border:1px solid var(--line); border-radius:3px; padding:2px; font:500 11px var(--numeric); background:var(--surface-subtle); color:var(--ink); }
+.arena-niche.occupied { background:color-mix(in srgb, var(--blue) var(--strength), var(--surface)); cursor:pointer; }
+.arena-niche[aria-pressed="true"] { outline:2px solid var(--blue); outline-offset:1px; }
+.arena-niche:disabled { opacity:0.4; }
+.arena-detail { color:var(--muted); font-size:13px; line-height:1.6; min-height:42px; overflow-wrap:anywhere; }
+.arena-steps { display:flex; overflow-x:auto; gap:6px; margin:18px 0; padding:3px; }
+.arena-steps button { background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:4px; padding:8px 12px; white-space:nowrap; cursor:pointer; }
+.arena-steps button[aria-pressed="true"] { border-color:var(--blue); color:var(--blue); background:var(--surface-subtle); }
+.arena-legend { display:flex; justify-content:center; gap:18px; font-size:12px; color:var(--muted); }
+.arena-legend span::before { content:""; display:inline-block; width:16px; height:2px; background:var(--muted); vertical-align:middle; margin-right:5px; }
+.arena-legend span:nth-child(2)::before { background:var(--blue); }
+.arena-legend span:nth-child(3)::before { background:var(--red); }
+.arena-generation { display:flex; gap:12px; align-items:center; color:var(--muted); font-size:13px; }
+.arena-generation input { flex:1; accent-color:var(--blue); }
+.arena-table-wrap { overflow-x:auto; }
+#arena-status { margin:16px 0; }
+#arena-status[data-error="true"] { color:var(--red); }
+@media(max-width:760px) { .arena-grid { grid-template-columns:1fr; gap:0; } .arena-metrics { grid-template-columns:repeat(2,1fr); } .arena-card { padding:15px; } .view-tabs { overflow-x:auto; } .view-tab { white-space:nowrap; } }
