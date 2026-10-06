@@ -1,7 +1,7 @@
 # Darwin Board
 
 <p align="center">
-  <img src="docs/assets/darwin-board-logo-transparent.png" alt="Darwin Board logo" width="360">
+  <img src="docs/assets/darwin-board-logo-transparent.png" alt="Darwin Board logo" width="180">
 </p>
 
 Darwin Board is an ESP32-controlled RC filter with 2,040 possible circuit

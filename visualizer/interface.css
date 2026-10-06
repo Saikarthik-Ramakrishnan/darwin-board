@@ -17,7 +17,7 @@
 .brand-name { font-size:34px; font-weight:600; letter-spacing:-.035em; }
 .brand-subtitle { display:block; font-size:14px; margin-top:3px; }
 .brand-logo { position:absolute; right:calc(100% + 16px); top:50%; transform:translateY(-50%); width:56px; height:59px; }
-:root[data-theme="dark"] .brand-logo { filter:brightness(1.5); }
+:root[data-theme="dark"] .brand-logo { filter:brightness(0) invert(1); opacity:.92; }
 .topbar-meta { grid-column:3; grid-row:1; justify-self:end; }
 .topbar .version { display:none; }
 .tutorial-start { grid-column:1; grid-row:1; justify-self:start; background:transparent; border-color:var(--line); }
